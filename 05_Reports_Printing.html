@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="fb_path" content="CloudPages:DevTools">
+    <meta name="fb_modules" content="*">
+    <meta name="fb_title" content="Reports &amp; Printing">
+    <title>Reports &amp; Printing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/fb.js"></script>
+    <script src="js/fishbowl.js"></script>
+    <style>
+        .mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.875rem; }
+        .output-pre { max-height: 500px; overflow: auto; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem; white-space: pre-wrap; word-break: break-word; }
+        .printer-item { cursor: pointer; }
+        .printer-item:hover { background-color: #e9ecef; }
+        .printer-item.selected { background-color: #cfe2ff; }
+        .param-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+        .param-row input { flex: 1; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">DevTools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="00_Environment.html">Environment</a></li>
+                    <li class="nav-item"><a class="nav-link" href="01_SQL_Console.html">SQL Console</a></li>
+                    <li class="nav-item"><a class="nav-link" href="02_Legacy_API_Explorer.html">Legacy API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="03_REST_API_Tester.html">REST API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="04_CSV_Import_Builder.html">CSV Import</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="05_Reports_Printing.html">Reports &amp; Print</a></li>
+                    <li class="nav-item"><a class="nav-link" href="06_Navigation_Dialogs.html">Navigation &amp; UI</a></li>
+                    <li class="nav-item"><a class="nav-link" href="07_Files_PluginData.html">Files &amp; Data</a></li>
+                    <li class="nav-item"><a class="nav-link" href="08_Timezone.html">Timezone</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <h2>Reports &amp; Printing</h2>
+        <p class="text-muted mb-4">Report preview, PDF generation, PDF printing, ZPL label printing, and merged report workflows.</p>
+
+        <div id="errorBanner" class="alert alert-danger d-none">
+            <strong>Library not loaded:</strong> <code>FB</code> is not available. Make sure <code>js/fb.js</code> is loaded.
+        </div>
+
+        <div class="row g-4">
+            <!-- Card 1: Printers -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong>Printers</strong>
+                        <button id="btnListPrinters" class="btn btn-sm btn-primary">List Printers</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="printerPlaceholder" class="text-muted p-3">Click "List Printers" to discover available printers.</div>
+                        <ul id="printerList" class="list-group list-group-flush d-none"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Report Preview & PDF -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header"><strong>Report Preview &amp; PDF</strong></div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="reportId" class="form-label">Report ID</label>
+                                <input type="number" id="reportId" class="form-control" placeholder="42" min="1">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="reportPrinter" class="form-label">Printer <small class="text-muted">(for printing)</small></label>
+                                <input type="text" id="reportPrinter" class="form-control" placeholder="Printer name">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="reportCopies" class="form-label">Copies</label>
+                                <input type="number" id="reportCopies" class="form-control" value="1" min="1">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="reportThrowEx">
+                                    <label class="form-check-label" for="reportThrowEx">Throw on error</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label">Report Parameters</label>
+                            <div id="reportParams"></div>
+                            <button id="btnAddParam" class="btn btn-sm btn-outline-secondary mt-1">+ Add Parameter</button>
+                        </div>
+
+                        <div class="mt-3 d-flex flex-wrap gap-2">
+                            <button id="btnPreview" class="btn btn-primary">Preview Report</button>
+                            <button id="btnGetPDF" class="btn btn-success">Get PDF</button>
+                            <button id="btnPrintReport" class="btn btn-outline-success">Print Report</button>
+                        </div>
+
+                        <pre id="reportResult" class="output-pre mt-3 mb-0"><span class="text-muted">Report results will appear here.</span></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-0">
+            <!-- Card 3: Print PDF -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header"><strong>Print PDF</strong></div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="pdfFile" class="form-label">PDF File</label>
+                            <input type="file" id="pdfFile" class="form-control" accept=".pdf">
+                        </div>
+                        <div class="mb-3">
+                            <button id="btnUseLastPDF" class="btn btn-sm btn-outline-info" disabled>Use Last Report PDF</button>
+                            <span id="lastPdfInfo" class="text-muted small ms-2"></span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label for="pdfPrinter" class="form-label">Printer</label>
+                                <input type="text" id="pdfPrinter" class="form-control" placeholder="Printer name">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end gap-2">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="pdfDialog">
+                                    <label class="form-check-label" for="pdfDialog">Show dialog</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btnPrintPDF" class="btn btn-primary mt-3">Print PDF</button>
+                        <pre id="pdfResult" class="output-pre mt-3 mb-0" style="max-height:150px;"><span class="text-muted">Print result will appear here.</span></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: ZPL Label Printing -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header"><strong>ZPL Label Printing</strong></div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="zplDoc" class="form-label">ZPL Document</label>
+                            <textarea id="zplDoc" class="form-control mono" rows="8">^XA
+^FO50,50^A0N,50,50^FDHello from DevTools^FS
+^FO50,120^BY3^BCN,100,Y,N,N^FD12345678^FS
+^XZ</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="zplPrinter" class="form-label">Printer</label>
+                            <input type="text" id="zplPrinter" class="form-control" placeholder="Zebra printer name">
+                        </div>
+                        <button id="btnPrintZPL" class="btn btn-primary">Print ZPL</button>
+                        <pre id="zplResult" class="output-pre mt-3 mb-0" style="max-height:150px;"><span class="text-muted">ZPL print result will appear here.</span></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 5: Merged Reports -->
+        <div class="card mt-4">
+            <div class="card-header"><strong>Merged Reports</strong></div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="mergedDict" class="form-label">Report Dictionary <small class="text-muted">(JSON array of {id, params} objects)</small></label>
+                    <textarea id="mergedDict" class="form-control mono" rows="8">[
+    { "id": 42, "params": { "SONumber": "50001" } },
+    { "id": 42, "params": { "SONumber": "50002" } }
+]</textarea>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="mergedPrinter" class="form-label">Printer <small class="text-muted">(for printing)</small></label>
+                        <input type="text" id="mergedPrinter" class="form-control" placeholder="Printer name">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="mergedCopies" class="form-label">Copies</label>
+                        <input type="number" id="mergedCopies" class="form-control" value="1" min="1">
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button id="btnGetMerged" class="btn btn-success">Get Merged PDF</button>
+                    <button id="btnPrintMerged" class="btn btn-outline-success">Print Merged</button>
+                </div>
+                <pre id="mergedResult" class="output-pre mt-3 mb-0"><span class="text-muted">Merged report results will appear here.</span></pre>
+            </div>
+        </div>
+
+        <!-- View Source -->
+        <div class="accordion mt-4 mb-5" id="viewSourceAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#viewSourceBody">
+                        View Source
+                    </button>
+                </h2>
+                <div id="viewSourceBody" class="accordion-collapse collapse" data-bs-parent="#viewSourceAccordion">
+                    <div class="accordion-body">
+<pre class="output-pre"><code>// List available printers
+var result = FB.localPrinters();
+console.log(result.printers);  // ['Printer1', 'Printer2', ...]
+
+// Preview a report (opens Fishbowl preview dialog)
+FB.previewReport(42, { SONumber: '50001' });
+
+// Get report as PDF
+var result = FB.getReportPDF(42, { SONumber: '50001' });
+if (!result.is_error) {
+    FB.saveFile('Save Report', 'pdf', 'PDF Files', result.pdf_bytes, 'report.pdf', true);
+}
+
+// Print a PDF
+FB.printPDF('HP LaserJet', base64PdfData, false);
+
+// Print a report directly
+FB.printReportPDF('HP LaserJet', 1, 42, { SONumber: '50001' });
+
+// Print ZPL to label printer
+FB.printZPL('Zebra ZT410', '^XA^FO50,50^A0N,50,50^FDHello^FS^XZ');
+
+// Merge and print multiple reports
+var dict = [
+    { id: 42, params: { SONumber: '50001' } },
+    { id: 42, params: { SONumber: '50002' } }
+];
+FB.printMergedReportsPDF('HP LaserJet', 1, dict);</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+(function () {
+    'use strict';
+
+    // --- Library check ---
+    if (typeof FB === 'undefined') {
+        document.getElementById('errorBanner').classList.remove('d-none');
+        return;
+    }
+
+    // --- State ---
+    var lastPdfBytes = null;
+    var selectedPrinter = null;
+
+    // --- Helper: fill all printer inputs ---
+    function fillPrinterInputs(name) {
+        selectedPrinter = name;
+        document.getElementById('reportPrinter').value = name;
+        document.getElementById('pdfPrinter').value = name;
+        document.getElementById('zplPrinter').value = name;
+        document.getElementById('mergedPrinter').value = name;
+    }
+
+    // --- Helper: get report params ---
+    function getReportParams() {
+        var params = {};
+        var rows = document.querySelectorAll('#reportParams .param-row');
+        for (var i = 0; i < rows.length; i++) {
+            var inputs = rows[i].querySelectorAll('input');
+            var key = inputs[0].value.trim();
+            var val = inputs[1].value;
+            if (key) params[key] = val;
+        }
+        return params;
+    }
+
+    // --- Helper: stringify params map for bridge (Map<String,String>) ---
+    function paramsToStringMap(params) {
+        var map = {};
+        for (var k in params) {
+            if (params.hasOwnProperty(k)) {
+                map[k] = String(params[k]);
+            }
+        }
+        return map;
+    }
+
+    // --- Card 1: Printers ---
+    document.getElementById('btnListPrinters').addEventListener('click', function () {
+        var printerPlaceholder = document.getElementById('printerPlaceholder');
+        var printerList = document.getElementById('printerList');
+        try {
+            var result = FB.localPrinters();
+            var printers = result.printers || result || [];
+            if (!Array.isArray(printers)) {
+                printerPlaceholder.textContent = 'Unexpected response: ' + JSON.stringify(result);
+                return;
+            }
+            if (printers.length === 0) {
+                printerPlaceholder.textContent = 'No printers found.';
+                printerPlaceholder.classList.remove('d-none');
+                printerList.classList.add('d-none');
+                return;
+            }
+            printerPlaceholder.classList.add('d-none');
+            printerList.classList.remove('d-none');
+            printerList.innerHTML = '';
+            for (var i = 0; i < printers.length; i++) {
+                (function (name) {
+                    var li = document.createElement('li');
+                    li.className = 'list-group-item printer-item';
+                    li.textContent = name;
+                    if (name === selectedPrinter) li.classList.add('selected');
+                    li.addEventListener('click', function () {
+                        fillPrinterInputs(name);
+                        // Update selected visual
+                        var items = printerList.querySelectorAll('.printer-item');
+                        for (var j = 0; j < items.length; j++) items[j].classList.remove('selected');
+                        li.classList.add('selected');
+                    });
+                    printerList.appendChild(li);
+                })(printers[i]);
+            }
+        } catch (e) {
+            printerPlaceholder.classList.remove('d-none');
+            printerPlaceholder.textContent = e.name + ': ' + e.message;
+            printerList.classList.add('d-none');
+        }
+    });
+
+    // --- Card 2: Report Params Builder ---
+    var reportParamsContainer = document.getElementById('reportParams');
+
+    function addParamRow(key, value) {
+        var row = document.createElement('div');
+        row.className = 'param-row';
+        var keyInput = document.createElement('input');
+        keyInput.type = 'text';
+        keyInput.className = 'form-control form-control-sm';
+        keyInput.placeholder = 'Parameter name';
+        keyInput.value = key || '';
+        var valInput = document.createElement('input');
+        valInput.type = 'text';
+        valInput.className = 'form-control form-control-sm';
+        valInput.placeholder = 'Value';
+        valInput.value = value || '';
+        var removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-sm btn-outline-danger';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.addEventListener('click', function () { row.remove(); });
+        row.appendChild(keyInput);
+        row.appendChild(valInput);
+        row.appendChild(removeBtn);
+        reportParamsContainer.appendChild(row);
+    }
+
+    document.getElementById('btnAddParam').addEventListener('click', function () {
+        addParamRow('', '');
+    });
+
+    // Add one default row
+    addParamRow('', '');
+
+    // --- Preview Report ---
+    document.getElementById('btnPreview').addEventListener('click', function () {
+        var reportResult = document.getElementById('reportResult');
+        var id = document.getElementById('reportId').value;
+        if (!id) { reportResult.textContent = 'Please enter a Report ID.'; return; }
+        var params = paramsToStringMap(getReportParams());
+        try {
+            FB.previewReport(parseInt(id), params);
+            reportResult.textContent = 'Preview opened for report #' + id;
+        } catch (e) {
+            reportResult.textContent = e.name + ': ' + e.message;
+        }
+    });
+
+    // --- Get PDF ---
+    document.getElementById('btnGetPDF').addEventListener('click', function () {
+        var reportResult = document.getElementById('reportResult');
+        var id = document.getElementById('reportId').value;
+        var throwEx = document.getElementById('reportThrowEx').checked;
+        if (!id) { reportResult.textContent = 'Please enter a Report ID.'; return; }
+        var params = paramsToStringMap(getReportParams());
+        try {
+            var result = FB.getReportPDF(parseInt(id), params, throwEx);
+            if (result && result.is_error) {
+                reportResult.textContent = 'Error: ' + (result.message || result.error_msg || JSON.stringify(result));
+                lastPdfBytes = null;
+            } else if (result && result.pdf_bytes) {
+                lastPdfBytes = result.pdf_bytes;
+                var sizeKB = Math.round((lastPdfBytes.length * 3 / 4) / 1024);
+                reportResult.textContent = 'PDF received: ~' + sizeKB + ' KB (base64 length: ' + lastPdfBytes.length + ')\n\nUse "Save File" or "Print PDF" to use this PDF.';
+                document.getElementById('btnUseLastPDF').disabled = false;
+                document.getElementById('lastPdfInfo').textContent = 'Report #' + id + ', ~' + sizeKB + ' KB';
+
+                // Offer to save
+                if (confirm('PDF generated. Save to file?')) {
+                    try {
+                        FB.saveFile('Save Report', 'pdf', 'PDF Files', lastPdfBytes, 'report_' + id + '.pdf', true);
+                    } catch (saveErr) {
+                        reportResult.textContent += '\n\nSave error: ' + saveErr.message;
+                    }
+                }
+            } else {
+                reportResult.textContent = 'Response:\n' + JSON.stringify(result, null, 2);
+            }
+        } catch (e) {
+            reportResult.textContent = e.name + ': ' + e.message;
+        }
+    });
+
+    // --- Print Report ---
+    document.getElementById('btnPrintReport').addEventListener('click', function () {
+        var reportResult = document.getElementById('reportResult');
+        var id = document.getElementById('reportId').value;
+        var printer = document.getElementById('reportPrinter').value.trim();
+        var copies = parseInt(document.getElementById('reportCopies').value) || 1;
+        var throwEx = document.getElementById('reportThrowEx').checked;
+        if (!id) { reportResult.textContent = 'Please enter a Report ID.'; return; }
+        if (!printer) { reportResult.textContent = 'Please enter a printer name.'; return; }
+        var params = paramsToStringMap(getReportParams());
+        try {
+            FB.printReportPDF(printer, copies, parseInt(id), params, throwEx);
+            reportResult.textContent = 'Print job sent to "' + printer + '" (' + copies + ' copies) for report #' + id;
+        } catch (e) {
+            reportResult.textContent = e.name + ': ' + e.message;
+        }
+    });
+
+    // --- Card 3: Print PDF ---
+    var pdfBase64 = null;
+
+    document.getElementById('pdfFile').addEventListener('change', function (e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+            // Remove data URL prefix to get raw base64
+            var dataUrl = reader.result;
+            pdfBase64 = dataUrl.split(',')[1] || dataUrl;
+            document.getElementById('pdfResult').textContent = 'File loaded: ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
+        };
+        reader.readAsDataURL(file);
+    });
+
+    document.getElementById('btnUseLastPDF').addEventListener('click', function () {
+        if (!lastPdfBytes) return;
+        pdfBase64 = lastPdfBytes;
+        document.getElementById('pdfResult').textContent = 'Using last report PDF (' + Math.round((lastPdfBytes.length * 3 / 4) / 1024) + ' KB)';
+    });
+
+    document.getElementById('btnPrintPDF').addEventListener('click', function () {
+        var pdfResult = document.getElementById('pdfResult');
+        var printer = document.getElementById('pdfPrinter').value.trim();
+        var dialog = document.getElementById('pdfDialog').checked;
+        if (!pdfBase64) { pdfResult.textContent = 'Please select a PDF file or use the last report PDF.'; return; }
+        if (!printer) { pdfResult.textContent = 'Please enter a printer name.'; return; }
+        try {
+            FB.printPDF(printer, pdfBase64, dialog);
+            pdfResult.textContent = 'Print job sent to "' + printer + '"' + (dialog ? ' (with dialog)' : '');
+        } catch (e) {
+            pdfResult.textContent = e.name + ': ' + e.message;
+        }
+    });
+
+    // --- Card 4: ZPL ---
+    document.getElementById('btnPrintZPL').addEventListener('click', function () {
+        var zplResult = document.getElementById('zplResult');
+        var zpl = document.getElementById('zplDoc').value;
+        var printer = document.getElementById('zplPrinter').value.trim();
+        if (!zpl.trim()) { zplResult.textContent = 'Please enter a ZPL document.'; return; }
+        if (!printer) { zplResult.textContent = 'Please enter a printer name.'; return; }
+        try {
+            FB.printZPL(printer, zpl);
+            zplResult.textContent = 'ZPL sent to "' + printer + '" (' + zpl.length + ' chars)';
+        } catch (e) {
+            zplResult.textContent = e.name + ': ' + e.message;
+        }
+    });
+
+    // --- Card 5: Merged Reports ---
+    function parseMergedDict() {
+        var text = document.getElementById('mergedDict').value.trim();
+        var arr = JSON.parse(text);
+        if (!Array.isArray(arr)) throw new Error('Expected a JSON array');
+        // Build the dict format the bridge expects
+        var dict = {};
+        for (var i = 0; i < arr.length; i++) {
+            var entry = arr[i];
+            var id = String(entry.id);
+            var params = paramsToStringMap(entry.params || {});
+            dict[id] = params;
+        }
+        return dict;
+    }
+
+    document.getElementById('btnGetMerged').addEventListener('click', function () {
+        var mergedResult = document.getElementById('mergedResult');
+        try {
+            var dict = parseMergedDict();
+            var result = FB.getMergedReportsPDF(dict);
+            if (result && result.is_error) {
+                mergedResult.textContent = 'Error: ' + (result.message || JSON.stringify(result));
+            } else {
+                mergedResult.textContent = 'Merged PDF received:\n' + JSON.stringify(result, null, 2);
+            }
+        } catch (e) {
+            mergedResult.textContent = e.name + ': ' + e.message;
+        }
+    });
+
+    document.getElementById('btnPrintMerged').addEventListener('click', function () {
+        var mergedResult = document.getElementById('mergedResult');
+        var printer = document.getElementById('mergedPrinter').value.trim();
+        var copies = parseInt(document.getElementById('mergedCopies').value) || 1;
+        if (!printer) { mergedResult.textContent = 'Please enter a printer name.'; return; }
+        try {
+            var dict = parseMergedDict();
+            FB.printMergedReportsPDF(printer, copies, dict);
+            mergedResult.textContent = 'Merged print job sent to "' + printer + '" (' + copies + ' copies)';
+        } catch (e) {
+            mergedResult.textContent = e.name + ': ' + e.message;
+        }
+    });
+
+})();
+</script>
+</body>
+</html>

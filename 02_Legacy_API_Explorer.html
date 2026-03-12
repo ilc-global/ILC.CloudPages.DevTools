@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="fb_path" content="CloudPages:DevTools">
+    <meta name="fb_modules" content="*">
+    <meta name="fb_title" content="Legacy API Explorer">
+    <title>Legacy API Explorer</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/fb.js"></script>
+    <script src="js/fishbowl.js"></script>
+    <style>
+        .api-list { max-height: 500px; overflow-y: auto; }
+        .api-item { cursor: pointer; padding: 0.3rem 0.75rem; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+        .api-item:hover { background-color: #e9ecef; }
+        .api-item.active { background-color: #0d6efd; color: #fff; }
+        .category-header { font-weight: bold; font-size: 0.8rem; padding: 0.4rem 0.75rem; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; color: #495057; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 1; }
+        #requestInput, #responseOutput { font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 0.85rem; }
+        #codeExample { font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 0.85rem; }
+        .schema-table td:first-child { font-weight: bold; width: 120px; white-space: nowrap; }
+        .pre-scroll { max-height: 400px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">DevTools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="00_Environment.html">Environment</a></li>
+                    <li class="nav-item"><a class="nav-link" href="01_SQL_Console.html">SQL Console</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="02_Legacy_API_Explorer.html">Legacy API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="03_REST_API_Tester.html">REST API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="04_CSV_Import_Builder.html">CSV Import</a></li>
+                    <li class="nav-item"><a class="nav-link" href="05_Reports_Printing.html">Reports & Print</a></li>
+                    <li class="nav-item"><a class="nav-link" href="06_Navigation_Dialogs.html">Navigation & UI</a></li>
+                    <li class="nav-item"><a class="nav-link" href="07_Files_PluginData.html">Files & Data</a></li>
+                    <li class="nav-item"><a class="nav-link" href="08_Timezone.html">Timezone</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <h1>Legacy API Explorer</h1>
+        <p>Browse and test all 109 registered Fishbowl API call types. Select an API from the list, inspect its schema, edit the request payload, and send it.</p>
+
+        <!-- Error banner -->
+        <div id="errorBanner" class="alert alert-danger d-none" role="alert">
+            <strong>Libraries not loaded.</strong> Ensure <code>js/fb.js</code> and <code>js/fishbowl.js</code> are available.
+        </div>
+
+        <!-- Row 1: API List + Schema Info -->
+        <div class="row mb-3">
+            <!-- API List (Left) -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">API Calls</span>
+                        <span id="apiCountBadge" class="badge bg-secondary">0</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="p-2">
+                            <input type="text" id="apiSearch" class="form-control form-control-sm" placeholder="Search API calls...">
+                        </div>
+                        <div id="apiList" class="api-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schema Info (Right) -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header fw-bold">Schema Info</div>
+                    <div class="card-body">
+                        <div id="schemaPlaceholder" class="text-muted">Select an API call from the list to view its schema.</div>
+                        <table id="schemaTable" class="table table-sm table-borderless schema-table d-none mb-0">
+                            <tbody>
+                                <tr><td>Enum Name</td><td id="schema-enum"></td></tr>
+                                <tr><td>Request</td><td id="schema-rq"></td></tr>
+                                <tr><td>Response</td><td id="schema-rs"></td></tr>
+                                <tr><td>Category</td><td id="schema-category"></td></tr>
+                                <tr><td>Array Paths</td><td id="schema-arrays"></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Request + Response -->
+        <div class="row mb-3">
+            <!-- Request -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Request</span>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-primary" id="btnSendSync">Send (Sync)</button>
+                            <button class="btn btn-success" id="btnSendAsync">Send (Async)</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <textarea class="form-control" id="requestInput" rows="10" placeholder="Select an API call to populate the request template..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Response -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Response</span>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="chkNormalize" checked>
+                            <label class="form-check-label" for="chkNormalize">Apply normalizeRs</label>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <pre id="responseOutput" class="pre-scroll border p-2 bg-light mb-0" style="min-height:200px; white-space: pre-wrap;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Code Example -->
+        <div class="card mb-3">
+            <div class="card-header fw-bold">Code Example</div>
+            <div class="card-body">
+                <pre id="codeExample" class="bg-dark text-light p-3 rounded mb-0" style="white-space: pre-wrap;">// Select an API call from the list above to see the code example.</pre>
+            </div>
+        </div>
+
+        <!-- Error output -->
+        <div id="apiError" class="alert alert-danger d-none" role="alert"></div>
+
+        <!-- View Source Accordion -->
+        <div class="accordion mt-4 mb-4" id="viewSourceAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#viewSourceBody">
+                        View Source
+                    </button>
+                </h2>
+                <div id="viewSourceBody" class="accordion-collapse collapse" data-bs-parent="#viewSourceAccordion">
+                    <div class="accordion-body">
+<pre class="bg-dark text-light p-3 rounded"><code>// Using FishbowlJSON factory (recommended)
+var rq = FishbowlJSON.PartGetRq({ PartNumber: 'B201' });
+var rs = await FB.legacyApiAsync(rq);
+FishbowlJSON.normalizeRs(rq, rs);  // Fix array normalization
+
+// Using enum name directly
+var rs = await FB.legacyApiAsync('PART_GET', JSON.stringify({
+    PartGetRq: { PartNumber: 'B201' }
+}));
+
+// List all registered API calls
+var apiList = FishbowlJSON.listApiCalls();  // Returns sorted enum names
+
+// Get schema for an API call
+var schema = FishbowlJSON.getApiSchema('PART_GET');
+// schema = { enumName, baseName, category, arrayPaths }
+
+// ensureArray — fix XML-to-JSON single-value lists
+var items = FishbowlJSON.ensureArray(response.Items.Item);</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // Check that FB and FishbowlJSON are loaded
+            if (typeof FB === 'undefined' || typeof FishbowlJSON === 'undefined') {
+                document.getElementById('errorBanner').classList.remove('d-none');
+                return;
+            }
+
+            var selectedEnum = null;
+            var allApis = [];        // { enumName, schema }
+            var groupedApis = {};    // { category: [{ enumName, schema }] }
+
+            // ---------- Build API List ----------
+            function buildApiList() {
+                var enumNames = FishbowlJSON.listApiCalls();
+                document.getElementById('apiCountBadge').textContent = enumNames.length;
+
+                allApis = [];
+                groupedApis = {};
+
+                enumNames.forEach(function (enumName) {
+                    var schema = FishbowlJSON.getApiSchema(enumName);
+                    var entry = { enumName: enumName, schema: schema };
+                    allApis.push(entry);
+
+                    var cat = (schema && schema.category) ? schema.category : 'uncategorized';
+                    if (!groupedApis[cat]) groupedApis[cat] = [];
+                    groupedApis[cat].push(entry);
+                });
+
+                renderApiList('');
+            }
+
+            function renderApiList(filter) {
+                var container = document.getElementById('apiList');
+                container.innerHTML = '';
+                var lowerFilter = filter.toLowerCase();
+
+                // Sort categories alphabetically
+                var categories = Object.keys(groupedApis).sort();
+
+                categories.forEach(function (cat) {
+                    var items = groupedApis[cat];
+                    var filtered = items.filter(function (item) {
+                        if (!lowerFilter) return true;
+                        return item.enumName.toLowerCase().indexOf(lowerFilter) >= 0 ||
+                               (item.schema.baseName && item.schema.baseName.toLowerCase().indexOf(lowerFilter) >= 0) ||
+                               cat.toLowerCase().indexOf(lowerFilter) >= 0;
+                    });
+
+                    if (filtered.length === 0) return;
+
+                    // Category header
+                    var header = document.createElement('div');
+                    header.className = 'category-header';
+                    header.textContent = cat + ' (' + filtered.length + ')';
+                    container.appendChild(header);
+
+                    // API items
+                    filtered.forEach(function (item) {
+                        var div = document.createElement('div');
+                        div.className = 'api-item' + (item.enumName === selectedEnum ? ' active' : '');
+                        div.textContent = item.enumName;
+                        div.dataset.enumName = item.enumName;
+                        div.addEventListener('click', function () {
+                            selectApi(item.enumName);
+                        });
+                        container.appendChild(div);
+                    });
+                });
+            }
+
+            // ---------- Search Filter ----------
+            document.getElementById('apiSearch').addEventListener('input', function () {
+                renderApiList(this.value.trim());
+            });
+
+            // ---------- Select API ----------
+            function selectApi(enumName) {
+                selectedEnum = enumName;
+                var schema = FishbowlJSON.getApiSchema(enumName);
+
+                // Highlight in list
+                document.querySelectorAll('.api-item').forEach(function (el) {
+                    el.classList.toggle('active', el.dataset.enumName === enumName);
+                });
+
+                // Show schema info
+                document.getElementById('schemaPlaceholder').classList.add('d-none');
+                document.getElementById('schemaTable').classList.remove('d-none');
+                document.getElementById('schema-enum').textContent = enumName;
+                document.getElementById('schema-rq').textContent = schema.baseName + 'Rq';
+                document.getElementById('schema-rs').textContent = schema.baseName + 'Rs';
+                document.getElementById('schema-category').textContent = schema.category || '(none)';
+
+                var arrayPathsEl = document.getElementById('schema-arrays');
+                if (schema.arrayPaths && schema.arrayPaths.length > 0) {
+                    arrayPathsEl.innerHTML = schema.arrayPaths.map(function (p) {
+                        return '<code>' + escapeHtml(p) + '</code>';
+                    }).join('<br>');
+                } else {
+                    arrayPathsEl.textContent = '(none)';
+                }
+
+                // Pre-fill request
+                var rqName = schema.baseName + 'Rq';
+                var template = {};
+                template[rqName] = {};
+                document.getElementById('requestInput').value = JSON.stringify(template, null, 2);
+
+                // Update code example
+                updateCodeExample(schema);
+
+                // Clear response
+                document.getElementById('responseOutput').textContent = '';
+                document.getElementById('apiError').classList.add('d-none');
+            }
+
+            function escapeHtml(str) {
+                var div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // ---------- Code Example ----------
+            function updateCodeExample(schema) {
+                var baseName = schema.baseName;
+                var rqName = baseName + 'Rq';
+                var enumName = schema.enumName;
+
+                var code =
+                    '// Using FishbowlJSON factory (recommended)\n' +
+                    'var rq = FishbowlJSON.' + rqName + '({ /* your data here */ });\n' +
+                    'var rs = await FB.legacyApiAsync(rq);\n' +
+                    'FishbowlJSON.normalizeRs(rq, rs);  // Fix array normalization\n' +
+                    '\n' +
+                    '// Using enum name directly\n' +
+                    'var rs = await FB.legacyApiAsync(\'' + enumName + '\', JSON.stringify({\n' +
+                    '    ' + rqName + ': { /* your data here */ }\n' +
+                    '}));';
+
+                document.getElementById('codeExample').textContent = code;
+            }
+
+            // ---------- Parse & Send ----------
+            function parseRequest() {
+                var text = document.getElementById('requestInput').value.trim();
+                if (!text) throw new Error('Request is empty.');
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    throw new Error('Invalid JSON: ' + e.message);
+                }
+            }
+
+            function buildRqObject(parsedJson) {
+                // Use the FishbowlJSON factory to create a properly typed rq object
+                if (!selectedEnum) throw new Error('No API call selected.');
+                var schema = FishbowlJSON.getApiSchema(selectedEnum);
+                var rqName = schema.baseName + 'Rq';
+                var factoryFn = FishbowlJSON[rqName];
+
+                if (typeof factoryFn !== 'function') {
+                    throw new Error('Factory FishbowlJSON.' + rqName + ' not found.');
+                }
+
+                // The parsed JSON has { RqName: { ...data } } — extract the inner data
+                var innerData = parsedJson[rqName] || {};
+                return factoryFn(innerData);
+            }
+
+            function displayResponse(response) {
+                var normalize = document.getElementById('chkNormalize').checked;
+                if (normalize && selectedEnum) {
+                    try {
+                        FishbowlJSON.normalizeRs(selectedEnum, response);
+                    } catch (e) {
+                        // Normalization failure is non-fatal
+                        console.warn('normalizeRs failed:', e);
+                    }
+                }
+                document.getElementById('responseOutput').textContent = JSON.stringify(response, null, 2);
+                document.getElementById('apiError').classList.add('d-none');
+            }
+
+            function showApiError(msg) {
+                var errorDiv = document.getElementById('apiError');
+                errorDiv.textContent = msg;
+                errorDiv.classList.remove('d-none');
+                document.getElementById('responseOutput').textContent = '';
+            }
+
+            // ---------- Send Sync ----------
+            document.getElementById('btnSendSync').addEventListener('click', function () {
+                if (!selectedEnum) { showApiError('Select an API call first.'); return; }
+
+                try {
+                    var parsedJson = parseRequest();
+                    var rqObj = buildRqObject(parsedJson);
+                    FB.setStatus('Sending ' + selectedEnum + ' (sync)...');
+                    var response = FB.legacyApi(rqObj);
+                    FB.setStatus(selectedEnum + ' completed.');
+                    displayResponse(response);
+                } catch (e) {
+                    FB.setStatus('');
+                    showApiError(e.message || String(e));
+                }
+            });
+
+            // ---------- Send Async ----------
+            document.getElementById('btnSendAsync').addEventListener('click', async function () {
+                if (!selectedEnum) { showApiError('Select an API call first.'); return; }
+
+                try {
+                    var parsedJson = parseRequest();
+                    var rqObj = buildRqObject(parsedJson);
+                    FB.setStatus('Sending ' + selectedEnum + ' (async)...');
+                    var response = await FB.legacyApiAsync(rqObj);
+                    FB.setStatus(selectedEnum + ' completed.');
+                    displayResponse(response);
+                } catch (e) {
+                    FB.setStatus('');
+                    showApiError(e.message || String(e));
+                }
+            });
+
+            // ---------- Init ----------
+            buildApiList();
+        })();
+    </script>
+</body>
+</html>

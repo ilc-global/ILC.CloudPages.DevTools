@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="fb_path" content="CloudPages:DevTools">
+    <meta name="fb_modules" content="*">
+    <meta name="fb_title" content="Timezone Utilities">
+    <title>Timezone Utilities</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/fb.js"></script>
+    <script src="js/fishbowl.js"></script>
+    <style>
+        .pre-scroll { max-height: 300px; overflow-y: auto; }
+        .card { margin-bottom: 1rem; }
+        .time-display { font-size: 1.5rem; font-family: monospace; font-weight: bold; }
+        .time-label { font-size: 0.85rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.05em; }
+        .conversion-arrow { font-size: 1.5rem; color: #6c757d; text-align: center; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">DevTools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="00_Environment.html">Environment</a></li>
+                    <li class="nav-item"><a class="nav-link" href="01_SQL_Console.html">SQL Console</a></li>
+                    <li class="nav-item"><a class="nav-link" href="02_Legacy_API_Explorer.html">Legacy API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="03_REST_API_Tester.html">REST API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="04_CSV_Import_Builder.html">CSV Import</a></li>
+                    <li class="nav-item"><a class="nav-link" href="05_Reports_Printing.html">Reports & Print</a></li>
+                    <li class="nav-item"><a class="nav-link" href="06_Navigation_Dialogs.html">Navigation & UI</a></li>
+                    <li class="nav-item"><a class="nav-link" href="07_Files_PluginData.html">Files & Data</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="08_Timezone.html">Timezone</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <h1>Timezone Utilities</h1>
+        <p>Interactive tool for timezone conversion between server and client. Useful for debugging timestamp issues in Fishbowl.</p>
+
+        <!-- Error banner (hidden by default) -->
+        <div id="errorBanner" class="alert alert-danger d-none" role="alert">
+            <strong>FB not loaded.</strong> The fb.js library could not be detected. Ensure <code>js/fb.js</code> is available.
+        </div>
+
+        <div class="row">
+            <!-- Card 1: Current Time -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">Current Time</div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="time-label">Client Time</div>
+                                <div class="time-display" id="clientTimeLive">--:--:--</div>
+                                <div class="text-muted small" id="clientTzName">--</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="time-label">Server Time</div>
+                                <div class="time-display" id="serverTimeLive">--:--:--</div>
+                                <div class="text-muted small" id="serverTzLabel">--</div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="serverTzInput" class="form-label">Server Timezone</label>
+                            <input type="text" class="form-control" id="serverTzInput" value="America/Los_Angeles">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Presets</label>
+                            <div class="d-flex flex-wrap gap-1">
+                                <button class="btn btn-outline-secondary btn-sm tz-preset" data-tz="America/New_York">New York</button>
+                                <button class="btn btn-outline-secondary btn-sm tz-preset" data-tz="America/Chicago">Chicago</button>
+                                <button class="btn btn-outline-secondary btn-sm tz-preset" data-tz="America/Denver">Denver</button>
+                                <button class="btn btn-outline-secondary btn-sm tz-preset" data-tz="America/Los_Angeles">Los Angeles</button>
+                                <button class="btn btn-outline-secondary btn-sm tz-preset" data-tz="UTC">UTC</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="btnGetServerTime">Get Server Time</button>
+                        <div id="serverTimeResult" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Server -> Client -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">Server &rarr; Client Conversion</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="s2cDatetime" class="form-label">Server Datetime</label>
+                            <input type="datetime-local" class="form-control" id="s2cDatetime" step="1">
+                        </div>
+                        <div class="mb-3">
+                            <label for="s2cTimezone" class="form-label">Server Timezone</label>
+                            <input type="text" class="form-control" id="s2cTimezone" value="America/Los_Angeles">
+                        </div>
+                        <button class="btn btn-success" id="btnS2C">Convert</button>
+                        <div id="s2cResult" class="mt-3">
+                            <div class="border rounded p-3 bg-light text-center d-none" id="s2cDisplay">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <div class="time-label">Server</div>
+                                        <div id="s2cServerDisplay" class="fw-bold">--</div>
+                                    </div>
+                                    <div class="col-auto conversion-arrow">&rarr;</div>
+                                    <div class="col">
+                                        <div class="time-label">Client</div>
+                                        <div id="s2cClientDisplay" class="fw-bold">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Card 3: Client -> Server -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">Client &rarr; Server Conversion</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="c2sDatetime" class="form-label">Client Datetime</label>
+                            <input type="datetime-local" class="form-control" id="c2sDatetime" step="1">
+                        </div>
+                        <div class="mb-3">
+                            <label for="c2sTimezone" class="form-label">Server Timezone</label>
+                            <input type="text" class="form-control" id="c2sTimezone" value="America/Los_Angeles">
+                        </div>
+                        <button class="btn btn-warning" id="btnC2S">Convert</button>
+                        <div id="c2sResult" class="mt-3">
+                            <div class="border rounded p-3 bg-light text-center d-none" id="c2sDisplay">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <div class="time-label">Client</div>
+                                        <div id="c2sClientDisplay" class="fw-bold">--</div>
+                                    </div>
+                                    <div class="col-auto conversion-arrow">&rarr;</div>
+                                    <div class="col">
+                                        <div class="time-label">Server</div>
+                                        <div id="c2sServerDisplay" class="fw-bold">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Conversion Table -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">Conversion Table</div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-2">Shows the current time across multiple timezones. Useful for debugging timezone discrepancies.</p>
+                        <button class="btn btn-info text-white mb-3" id="btnGenTable">Generate Table</button>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped d-none" id="tzTable">
+                                <thead>
+                                    <tr>
+                                        <th>Timezone</th>
+                                        <th>Current Time</th>
+                                        <th>UTC Offset</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tzTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="tzTableError"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Source Accordion -->
+        <div class="accordion mt-4 mb-4" id="viewSourceAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#viewSourceBody">
+                        View Source
+                    </button>
+                </h2>
+                <div id="viewSourceBody" class="accordion-collapse collapse" data-bs-parent="#viewSourceAccordion">
+                    <div class="accordion-body">
+<pre class="bg-dark text-light p-3 rounded"><code>// Get current time in server timezone
+var serverTime = FB.getTimeForServer('America/Los_Angeles');
+// Returns: "2026-03-12 14:30:00"
+
+// Convert server time to client's local time
+var clientTime = FB.convertServerTimeToClient(
+    '2026-03-12 14:30:00',
+    'America/Los_Angeles'
+);
+// Returns: "2026-03-12 17:30:00" (if client is EST)
+
+// Convert client local time to server timezone
+var serverTime = FB.convertClientTimeToServer(
+    '2026-03-12 17:30:00',
+    'America/Los_Angeles'
+);
+// Returns: "2026-03-12 14:30:00"
+
+// Common pattern: store server-timezone timestamps
+var now = FB.getTimeForServer('America/Los_Angeles');
+await FB.queryAsync(
+    'UPDATE settings SET lastRun = :time WHERE id = 1',
+    { time: now }
+);</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // Check that FB is loaded
+            if (typeof FB === 'undefined') {
+                document.getElementById('errorBanner').classList.remove('d-none');
+                return;
+            }
+
+            // ---------- Helper: format date for datetime-local input ----------
+            function toDatetimeLocalValue(date) {
+                var y = date.getFullYear();
+                var m = String(date.getMonth() + 1).padStart(2, '0');
+                var d = String(date.getDate()).padStart(2, '0');
+                var h = String(date.getHours()).padStart(2, '0');
+                var min = String(date.getMinutes()).padStart(2, '0');
+                var s = String(date.getSeconds()).padStart(2, '0');
+                return y + '-' + m + '-' + d + 'T' + h + ':' + min + ':' + s;
+            }
+
+            // Format "yyyy-MM-dd HH:mm:ss" from datetime-local value "yyyy-MM-ddTHH:mm:ss"
+            function datetimeLocalToStr(val) {
+                return val ? val.replace('T', ' ') : '';
+            }
+
+            // Format datetime-local value from "yyyy-MM-dd HH:mm:ss"
+            function strToDatetimeLocal(str) {
+                return str ? str.replace(' ', 'T') : '';
+            }
+
+            function escapeHtml(str) {
+                var div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // ---------- Detect client timezone ----------
+            var clientTz = 'Unknown';
+            try {
+                clientTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            } catch (e) {
+                // fallback
+            }
+            document.getElementById('clientTzName').textContent = clientTz;
+
+            // ---------- Initialize default datetime values ----------
+            var now = new Date();
+            document.getElementById('s2cDatetime').value = toDatetimeLocalValue(now);
+            document.getElementById('c2sDatetime').value = toDatetimeLocalValue(now);
+
+            // ---------- Server timezone from main input ----------
+            function getServerTz() {
+                return document.getElementById('serverTzInput').value.trim() || 'America/Los_Angeles';
+            }
+
+            // Sync server timezone across cards
+            document.getElementById('serverTzInput').addEventListener('change', function () {
+                var tz = this.value.trim();
+                document.getElementById('s2cTimezone').value = tz;
+                document.getElementById('c2sTimezone').value = tz;
+            });
+
+            // ---------- Timezone presets ----------
+            document.querySelectorAll('.tz-preset').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var tz = this.getAttribute('data-tz');
+                    document.getElementById('serverTzInput').value = tz;
+                    document.getElementById('s2cTimezone').value = tz;
+                    document.getElementById('c2sTimezone').value = tz;
+                    // Trigger live update
+                    updateServerTimeLive();
+                });
+            });
+
+            // ---------- Card 1: Live clock ----------
+            function formatClientTime() {
+                var d = new Date();
+                var h = String(d.getHours()).padStart(2, '0');
+                var m = String(d.getMinutes()).padStart(2, '0');
+                var s = String(d.getSeconds()).padStart(2, '0');
+                return d.getFullYear() + '-' +
+                    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(d.getDate()).padStart(2, '0') + ' ' +
+                    h + ':' + m + ':' + s;
+            }
+
+            function updateServerTimeLive() {
+                var tz = getServerTz();
+                document.getElementById('serverTzLabel').textContent = tz;
+                try {
+                    var serverTime = FB.getTimeForServer(tz);
+                    document.getElementById('serverTimeLive').textContent = serverTime;
+                } catch (e) {
+                    document.getElementById('serverTimeLive').textContent = '--:--:--';
+                }
+            }
+
+            function updateClock() {
+                document.getElementById('clientTimeLive').textContent = formatClientTime();
+                updateServerTimeLive();
+            }
+
+            // Update every second
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            // Get Server Time button
+            document.getElementById('btnGetServerTime').addEventListener('click', function () {
+                var tz = getServerTz();
+                var resultDiv = document.getElementById('serverTimeResult');
+                try {
+                    var serverTime = FB.getTimeForServer(tz);
+                    resultDiv.innerHTML = '<div class="alert alert-success py-1 mb-0"><strong>FB.getTimeForServer(\'' +
+                        escapeHtml(tz) + '\')</strong><br>Result: <code>' + escapeHtml(serverTime) + '</code></div>';
+                } catch (e) {
+                    resultDiv.innerHTML = '<div class="alert alert-danger py-1 mb-0">Error: ' + escapeHtml(e.message) + '</div>';
+                }
+            });
+
+            // ---------- Card 2: Server -> Client ----------
+            document.getElementById('btnS2C').addEventListener('click', function () {
+                var dtVal = document.getElementById('s2cDatetime').value;
+                var tz = document.getElementById('s2cTimezone').value.trim();
+                if (!dtVal) {
+                    document.getElementById('s2cDisplay').classList.add('d-none');
+                    document.getElementById('s2cResult').innerHTML = '<div class="alert alert-warning py-1">Please enter a server datetime.</div>';
+                    return;
+                }
+                var dtStr = datetimeLocalToStr(dtVal);
+                try {
+                    var clientTime = FB.convertServerTimeToClient(dtStr, tz);
+                    document.getElementById('s2cServerDisplay').textContent = dtStr + ' (' + tz + ')';
+                    document.getElementById('s2cClientDisplay').textContent = clientTime + ' (' + clientTz + ')';
+                    document.getElementById('s2cDisplay').classList.remove('d-none');
+                } catch (e) {
+                    document.getElementById('s2cDisplay').classList.add('d-none');
+                    document.getElementById('s2cResult').innerHTML = '<div class="alert alert-danger py-1">Error: ' + escapeHtml(e.message) + '</div>';
+                }
+            });
+
+            // ---------- Card 3: Client -> Server ----------
+            document.getElementById('btnC2S').addEventListener('click', function () {
+                var dtVal = document.getElementById('c2sDatetime').value;
+                var tz = document.getElementById('c2sTimezone').value.trim();
+                if (!dtVal) {
+                    document.getElementById('c2sDisplay').classList.add('d-none');
+                    document.getElementById('c2sResult').innerHTML = '<div class="alert alert-warning py-1">Please enter a client datetime.</div>';
+                    return;
+                }
+                var dtStr = datetimeLocalToStr(dtVal);
+                try {
+                    var serverTime = FB.convertClientTimeToServer(dtStr, tz);
+                    document.getElementById('c2sClientDisplay').textContent = dtStr + ' (' + clientTz + ')';
+                    document.getElementById('c2sServerDisplay').textContent = serverTime + ' (' + tz + ')';
+                    document.getElementById('c2sDisplay').classList.remove('d-none');
+                } catch (e) {
+                    document.getElementById('c2sDisplay').classList.add('d-none');
+                    document.getElementById('c2sResult').innerHTML = '<div class="alert alert-danger py-1">Error: ' + escapeHtml(e.message) + '</div>';
+                }
+            });
+
+            // ---------- Card 4: Conversion Table ----------
+            var defaultTimezones = [
+                'UTC',
+                'America/New_York',
+                'America/Chicago',
+                'America/Denver',
+                'America/Los_Angeles',
+                'Europe/London',
+                'Asia/Tokyo'
+            ];
+
+            function getUtcOffset(tz) {
+                try {
+                    var now = new Date();
+                    // Get the timezone offset string via Intl
+                    var formatter = new Intl.DateTimeFormat('en-US', {
+                        timeZone: tz,
+                        timeZoneName: 'shortOffset'
+                    });
+                    var parts = formatter.formatToParts(now);
+                    for (var i = 0; i < parts.length; i++) {
+                        if (parts[i].type === 'timeZoneName') {
+                            return parts[i].value;
+                        }
+                    }
+                    return '--';
+                } catch (e) {
+                    return 'Error';
+                }
+            }
+
+            document.getElementById('btnGenTable').addEventListener('click', function () {
+                var tbody = document.getElementById('tzTableBody');
+                var table = document.getElementById('tzTable');
+                var errorDiv = document.getElementById('tzTableError');
+                tbody.innerHTML = '';
+                errorDiv.innerHTML = '';
+
+                var hasError = false;
+
+                for (var i = 0; i < defaultTimezones.length; i++) {
+                    var tz = defaultTimezones[i];
+                    var tr = document.createElement('tr');
+
+                    var tdTz = document.createElement('td');
+                    tdTz.textContent = tz;
+                    tr.appendChild(tdTz);
+
+                    var tdTime = document.createElement('td');
+                    try {
+                        var time = FB.getTimeForServer(tz);
+                        tdTime.textContent = time;
+                        tdTime.classList.add('font-monospace');
+                    } catch (e) {
+                        tdTime.textContent = 'Error: ' + e.message;
+                        tdTime.classList.add('text-danger');
+                        hasError = true;
+                    }
+                    tr.appendChild(tdTime);
+
+                    var tdOffset = document.createElement('td');
+                    tdOffset.textContent = getUtcOffset(tz);
+                    tr.appendChild(tdOffset);
+
+                    tbody.appendChild(tr);
+                }
+
+                table.classList.remove('d-none');
+
+                if (hasError) {
+                    errorDiv.innerHTML = '<div class="alert alert-warning py-1 mt-2 small">Some timezones returned errors. This may be expected if running outside JXBrowser with a 2024 bridge.</div>';
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

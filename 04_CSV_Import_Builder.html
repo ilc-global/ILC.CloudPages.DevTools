@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="fb_path" content="CloudPages:DevTools">
+    <meta name="fb_modules" content="*">
+    <meta name="fb_title" content="CSV Import Builder">
+    <title>CSV Import Builder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/fb.js"></script>
+    <script src="js/fishbowl.js"></script>
+    <style>
+        .mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.875rem; }
+        .output-pre { max-height: 500px; overflow: auto; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem; white-space: pre-wrap; word-break: break-word; }
+        .type-list { max-height: 600px; overflow-y: auto; }
+        .type-list .list-group-item { cursor: pointer; padding: 0.4rem 0.75rem; font-size: 0.875rem; }
+        .type-list .list-group-item:hover { background-color: #e9ecef; }
+        .type-list .list-group-item.active { background-color: #0d6efd; border-color: #0d6efd; }
+        .schema-badge { font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">DevTools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="00_Environment.html">Environment</a></li>
+                    <li class="nav-item"><a class="nav-link" href="01_SQL_Console.html">SQL Console</a></li>
+                    <li class="nav-item"><a class="nav-link" href="02_Legacy_API_Explorer.html">Legacy API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="03_REST_API_Tester.html">REST API</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="04_CSV_Import_Builder.html">CSV Import</a></li>
+                    <li class="nav-item"><a class="nav-link" href="05_Reports_Printing.html">Reports &amp; Print</a></li>
+                    <li class="nav-item"><a class="nav-link" href="06_Navigation_Dialogs.html">Navigation &amp; UI</a></li>
+                    <li class="nav-item"><a class="nav-link" href="07_Files_PluginData.html">Files &amp; Data</a></li>
+                    <li class="nav-item"><a class="nav-link" href="08_Timezone.html">Timezone</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <h2>CSV Import Builder</h2>
+        <p class="text-muted mb-4">Explore all 56 import types in fishbowl.js, inspect schemas, build CSV imports from JSON data, and execute them.</p>
+
+        <div id="errorBanner" class="alert alert-danger d-none">
+            <strong>Library not loaded:</strong> <code>FishbowlCSV</code> or <code>FB</code> is not available. Make sure <code>js/fb.js</code> and <code>js/fishbowl.js</code> are loaded.
+        </div>
+
+        <!-- Row 1: Type list + Schema info -->
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <strong>Import Types</strong>
+                        <span id="typeCount" class="badge bg-secondary ms-2"></span>
+                    </div>
+                    <div class="card-body p-2">
+                        <input type="text" id="typeSearch" class="form-control form-control-sm mb-2" placeholder="Search types...">
+                        <div class="type-list">
+                            <div id="typeList" class="list-group list-group-flush"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header"><strong>Schema Info</strong></div>
+                    <div class="card-body">
+                        <div id="schemaPlaceholder" class="text-muted">Select an import type from the list.</div>
+                        <div id="schemaInfo" class="d-none">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <strong>Import Type:</strong> <code id="schemaImportType"></code>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Factory:</strong> <code id="schemaFactory"></code>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Structure:</strong> <span id="schemaStructure" class="badge schema-badge"></span>
+                                </div>
+                            </div>
+
+                            <div id="simpleColumnsSection">
+                                <h6>Columns</h6>
+                                <div id="simpleColumns" class="mb-3"></div>
+                            </div>
+
+                            <div id="hierColumnsSection" class="d-none">
+                                <h6>Header Columns</h6>
+                                <div id="headerColumns" class="mb-2"></div>
+                                <h6>Item Columns</h6>
+                                <div id="itemColumns" class="mb-3"></div>
+                            </div>
+
+                            <div id="dynamicFieldsSection" class="d-none">
+                                <h6>Dynamic Fields</h6>
+                                <div id="dynamicFields" class="mb-3"></div>
+                            </div>
+
+                            <h6>CSV Template</h6>
+                            <pre id="csvTemplate" class="output-pre" style="max-height: 120px;"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Build Import -->
+        <div class="card mt-4">
+            <div class="card-header"><strong>Build Import</strong></div>
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="buildTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="jsonTab" data-bs-toggle="tab" data-bs-target="#jsonPane" type="button" role="tab">JSON Data</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="csvTab" data-bs-toggle="tab" data-bs-target="#csvPane" type="button" role="tab">CSV Preview</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="rqTab" data-bs-toggle="tab" data-bs-target="#rqPane" type="button" role="tab">Import Request</button>
+                    </li>
+                </ul>
+                <div class="tab-content border border-top-0 rounded-bottom p-3">
+                    <div class="tab-pane fade show active" id="jsonPane" role="tabpanel">
+                        <textarea id="jsonData" class="form-control mono" rows="10" placeholder="Enter an array of objects matching the schema columns..."></textarea>
+                    </div>
+                    <div class="tab-pane fade" id="csvPane" role="tabpanel">
+                        <textarea id="csvPreview" class="form-control mono" rows="10" readonly></textarea>
+                    </div>
+                    <div class="tab-pane fade" id="rqPane" role="tabpanel">
+                        <textarea id="importRqPreview" class="form-control mono" rows="10" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Action Buttons -->
+        <div class="card mt-4">
+            <div class="card-body d-flex flex-wrap gap-2">
+                <button id="btnGenerate" class="btn btn-primary" disabled>Generate CSV</button>
+                <button id="btnExecSync" class="btn btn-success" disabled>Execute Import (Sync)</button>
+                <button id="btnExecAsync" class="btn btn-outline-success" disabled>Execute Import (Async)</button>
+                <button id="btnDownloadTemplate" class="btn btn-outline-secondary" disabled>Download Template</button>
+            </div>
+        </div>
+
+        <!-- Row 4: Results -->
+        <div class="card mt-4">
+            <div class="card-header"><strong>Result</strong></div>
+            <div class="card-body">
+                <pre id="resultOutput" class="output-pre mb-0"><span class="text-muted">Execute an import to see results here.</span></pre>
+            </div>
+        </div>
+
+        <!-- View Source -->
+        <div class="accordion mt-4 mb-5" id="viewSourceAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#viewSourceBody">
+                        View Source
+                    </button>
+                </h2>
+                <div id="viewSourceBody" class="accordion-collapse collapse" data-bs-parent="#viewSourceAccordion">
+                    <div class="accordion-body">
+<pre class="output-pre"><code>// List all import types
+var types = FishbowlCSV.listTypes();
+
+// Get schema and columns
+var schema = FishbowlCSV.getSchema('ImportPart');
+var columns = FishbowlCSV.getColumns('ImportPart');
+
+// Build import from data
+var imp = FishbowlCSV.Part([
+    { PartNumber: 'TEST-001', PartDescription: 'Test Part', UOM: 'ea' }
+]);
+var csv = imp.toCSV();
+
+// Or use the generic create method
+var imp = FishbowlCSV.create('ImportPart', data);
+
+// Execute the import
+var result = await FB.importCSVAsync('ImportPart', csv);
+
+// Using CsvBuilder for manual CSV
+var builder = new FishbowlCSV.CsvBuilder();
+builder.header(['PartNumber', 'PartDescription', 'UOM']);
+builder.row(['TEST-001', 'Test Part', 'ea']);
+var csv = builder.build();
+
+// Import from JSON (alternative)
+var result = await FB.importCSVFromJSONAsync('ImportPart',
+    JSON.stringify(imp.toRows())
+);</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+(function () {
+    'use strict';
+
+    // --- Library check ---
+    var hasFB = typeof FB !== 'undefined';
+    var hasCSV = typeof FishbowlCSV !== 'undefined';
+
+    if (!hasFB || !hasCSV) {
+        document.getElementById('errorBanner').classList.remove('d-none');
+        if (!hasCSV) return;
+    }
+
+    // --- DOM refs ---
+    var typeSearch = document.getElementById('typeSearch');
+    var typeListEl = document.getElementById('typeList');
+    var typeCount = document.getElementById('typeCount');
+    var schemaPlaceholder = document.getElementById('schemaPlaceholder');
+    var schemaInfo = document.getElementById('schemaInfo');
+    var schemaImportType = document.getElementById('schemaImportType');
+    var schemaFactory = document.getElementById('schemaFactory');
+    var schemaStructure = document.getElementById('schemaStructure');
+    var simpleColumnsSection = document.getElementById('simpleColumnsSection');
+    var simpleColumns = document.getElementById('simpleColumns');
+    var hierColumnsSection = document.getElementById('hierColumnsSection');
+    var headerColumns = document.getElementById('headerColumns');
+    var itemColumns = document.getElementById('itemColumns');
+    var dynamicFieldsSection = document.getElementById('dynamicFieldsSection');
+    var dynamicFields = document.getElementById('dynamicFields');
+    var csvTemplate = document.getElementById('csvTemplate');
+    var jsonData = document.getElementById('jsonData');
+    var csvPreview = document.getElementById('csvPreview');
+    var importRqPreview = document.getElementById('importRqPreview');
+    var btnGenerate = document.getElementById('btnGenerate');
+    var btnExecSync = document.getElementById('btnExecSync');
+    var btnExecAsync = document.getElementById('btnExecAsync');
+    var btnDownloadTemplate = document.getElementById('btnDownloadTemplate');
+    var resultOutput = document.getElementById('resultOutput');
+
+    var allTypes = FishbowlCSV.listTypes();
+    var selectedType = null;
+    var lastCSV = null;
+
+    // --- Render type list ---
+    function renderTypeList(filter) {
+        typeListEl.innerHTML = '';
+        var filtered = filter
+            ? allTypes.filter(function (t) { return t.toLowerCase().indexOf(filter.toLowerCase()) !== -1; })
+            : allTypes;
+        typeCount.textContent = filtered.length + ' / ' + allTypes.length;
+        for (var i = 0; i < filtered.length; i++) {
+            (function (typeName) {
+                var a = document.createElement('a');
+                a.href = '#';
+                a.className = 'list-group-item list-group-item-action';
+                if (typeName === selectedType) a.classList.add('active');
+                a.textContent = typeName;
+                a.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    selectType(typeName);
+                });
+                typeListEl.appendChild(a);
+            })(filtered[i]);
+        }
+    }
+
+    typeSearch.addEventListener('input', function () {
+        renderTypeList(this.value);
+    });
+
+    // --- Render column badges ---
+    function renderColumnBadges(container, cols) {
+        container.innerHTML = '';
+        for (var i = 0; i < cols.length; i++) {
+            var span = document.createElement('span');
+            span.className = 'badge bg-light text-dark border me-1 mb-1';
+            span.style.fontSize = '0.8rem';
+            span.textContent = cols[i];
+            container.appendChild(span);
+        }
+    }
+
+    // --- Select type ---
+    function selectType(typeName) {
+        selectedType = typeName;
+        renderTypeList(typeSearch.value);
+
+        var schema = FishbowlCSV.getSchema(typeName);
+        var columns = FishbowlCSV.getColumns(typeName);
+        var template = FishbowlCSV.getTemplate(typeName);
+
+        schemaPlaceholder.classList.add('d-none');
+        schemaInfo.classList.remove('d-none');
+
+        schemaImportType.textContent = typeName;
+        schemaFactory.textContent = 'FishbowlCSV.' + schema.name + '(data)';
+
+        // Structure badge
+        var struct = schema.structure || 'simple';
+        schemaStructure.textContent = struct;
+        schemaStructure.className = 'badge schema-badge';
+        if (struct === 'simple') schemaStructure.classList.add('bg-primary');
+        else if (struct === 'hierarchical') schemaStructure.classList.add('bg-warning', 'text-dark');
+        else if (struct === 'tracking') schemaStructure.classList.add('bg-info', 'text-dark');
+        else schemaStructure.classList.add('bg-secondary');
+
+        // Columns
+        if (struct === 'hierarchical') {
+            simpleColumnsSection.classList.add('d-none');
+            hierColumnsSection.classList.remove('d-none');
+            renderColumnBadges(headerColumns, columns.header);
+            renderColumnBadges(itemColumns, columns.item);
+        } else {
+            simpleColumnsSection.classList.remove('d-none');
+            hierColumnsSection.classList.add('d-none');
+            renderColumnBadges(simpleColumns, columns);
+        }
+
+        // Dynamic fields
+        var dynFields = schema.dynamicFields || (schema.header && schema.header.dynamicFields) || (schema.item && schema.item.dynamicFields);
+        var allDyn = [];
+        if (schema.dynamicFields) allDyn = allDyn.concat(schema.dynamicFields);
+        if (schema.header && schema.header.dynamicFields) allDyn = allDyn.concat(schema.header.dynamicFields.map(function(d) { return { prefix: d.prefix, prop: 'header.' + d.prop }; }));
+        if (schema.item && schema.item.dynamicFields) allDyn = allDyn.concat(schema.item.dynamicFields.map(function(d) { return { prefix: d.prefix, prop: 'item.' + d.prop }; }));
+
+        if (allDyn.length > 0) {
+            dynamicFieldsSection.classList.remove('d-none');
+            dynamicFields.innerHTML = '';
+            for (var i = 0; i < allDyn.length; i++) {
+                var span = document.createElement('span');
+                span.className = 'badge bg-secondary me-1 mb-1';
+                span.style.fontSize = '0.8rem';
+                span.textContent = allDyn[i].prefix + '* (' + allDyn[i].prop + ')';
+                dynamicFields.appendChild(span);
+            }
+        } else {
+            dynamicFieldsSection.classList.add('d-none');
+        }
+
+        // Template
+        csvTemplate.textContent = template;
+
+        // Pre-fill JSON data with sample
+        jsonData.value = generateSampleJSON(schema, columns);
+        csvPreview.value = '';
+        importRqPreview.value = '';
+        lastCSV = null;
+
+        // Enable buttons
+        btnGenerate.disabled = false;
+        btnDownloadTemplate.disabled = false;
+        btnExecSync.disabled = true;
+        btnExecAsync.disabled = true;
+    }
+
+    // --- Generate sample JSON ---
+    function generateSampleJSON(schema, columns) {
+        if (schema.structure === 'hierarchical') {
+            var headerObj = {};
+            var cols = columns.header;
+            // Skip the first column (flag column) for header
+            for (var i = 1; i < cols.length; i++) {
+                headerObj[cols[i]] = '';
+            }
+            var itemObj = {};
+            var iCols = columns.item;
+            for (var j = 1; j < iCols.length; j++) {
+                itemObj[iCols[j]] = '';
+            }
+            return JSON.stringify({ header: headerObj, items: [itemObj] }, null, 4);
+        }
+        // Simple or tracking
+        var obj = {};
+        var c = Array.isArray(columns) ? columns : [];
+        for (var k = 0; k < c.length; k++) {
+            obj[c[k]] = '';
+        }
+        return JSON.stringify([obj], null, 4);
+    }
+
+    // --- Generate CSV ---
+    btnGenerate.addEventListener('click', function () {
+        if (!selectedType) return;
+        try {
+            var data = JSON.parse(jsonData.value);
+            var imp = FishbowlCSV.create(selectedType, data);
+            lastCSV = imp.toCSV();
+            csvPreview.value = lastCSV;
+
+            var rq = imp.toImportRq();
+            importRqPreview.value = JSON.stringify(rq, null, 2);
+
+            // Switch to CSV Preview tab
+            var csvTabEl = document.getElementById('csvTab');
+            var tab = new bootstrap.Tab(csvTabEl);
+            tab.show();
+
+            btnExecSync.disabled = false;
+            btnExecAsync.disabled = false;
+            resultOutput.innerHTML = '<span class="text-muted">CSV generated. Ready to execute.</span>';
+        } catch (e) {
+            csvPreview.value = '';
+            importRqPreview.value = '';
+            resultOutput.textContent = 'Error generating CSV: ' + e.message;
+        }
+    });
+
+    // --- Execute Sync ---
+    btnExecSync.addEventListener('click', function () {
+        if (!selectedType || !lastCSV) return;
+        if (!hasFB) { resultOutput.textContent = 'FB library not available.'; return; }
+        try {
+            var start = performance.now();
+            var result = FB.importCSV(selectedType, lastCSV);
+            var elapsed = Math.round(performance.now() - start);
+            resultOutput.textContent = 'Completed in ' + elapsed + ' ms\n\n' +
+                JSON.stringify(result, null, 2);
+        } catch (e) {
+            resultOutput.textContent = e.name + ': ' + e.message;
+        }
+    });
+
+    // --- Execute Async ---
+    btnExecAsync.addEventListener('click', async function () {
+        if (!selectedType || !lastCSV) return;
+        if (!hasFB) { resultOutput.textContent = 'FB library not available.'; return; }
+        resultOutput.textContent = 'Executing...';
+        try {
+            var start = performance.now();
+            var result = await FB.importCSVAsync(selectedType, lastCSV);
+            var elapsed = Math.round(performance.now() - start);
+            resultOutput.textContent = 'Completed in ' + elapsed + ' ms\n\n' +
+                JSON.stringify(result, null, 2);
+        } catch (e) {
+            resultOutput.textContent = e.name + ': ' + e.message;
+        }
+    });
+
+    // --- Download Template ---
+    btnDownloadTemplate.addEventListener('click', function () {
+        if (!selectedType) return;
+        var template = FishbowlCSV.getTemplate(selectedType);
+        if (!template) return;
+        var blob = new Blob([template], { type: 'text/csv' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = selectedType + '_template.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+
+    // --- Init ---
+    renderTypeList('');
+
+})();
+</script>
+</body>
+</html>

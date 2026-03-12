@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="fb_path" content="CloudPages:DevTools">
+    <meta name="fb_modules" content="*">
+    <meta name="fb_title" content="Environment & Context">
+    <title>Environment & Context</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/fb.js"></script>
+    <script src="js/fishbowl.js"></script>
+    <style>
+        .pre-scroll { max-height: 300px; overflow-y: auto; }
+        .card { margin-bottom: 1rem; }
+        .loading { color: #6c757d; font-style: italic; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">DevTools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="00_Environment.html">Environment</a></li>
+                    <li class="nav-item"><a class="nav-link" href="01_SQL_Console.html">SQL Console</a></li>
+                    <li class="nav-item"><a class="nav-link" href="02_Legacy_API_Explorer.html">Legacy API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="03_REST_API_Tester.html">REST API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="04_CSV_Import_Builder.html">CSV Import</a></li>
+                    <li class="nav-item"><a class="nav-link" href="05_Reports_Printing.html">Reports & Print</a></li>
+                    <li class="nav-item"><a class="nav-link" href="06_Navigation_Dialogs.html">Navigation & UI</a></li>
+                    <li class="nav-item"><a class="nav-link" href="07_Files_PluginData.html">Files & Data</a></li>
+                    <li class="nav-item"><a class="nav-link" href="08_Timezone.html">Timezone</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <h1>Environment & Context</h1>
+        <p>Interactive diagnostic tool showing the current runtime environment, user context, and available methods. Data loads automatically on page load.</p>
+
+        <!-- Error banner (hidden by default) -->
+        <div id="errorBanner" class="alert alert-danger d-none" role="alert">
+            <strong>FB not loaded.</strong> The fb.js library could not be detected. Ensure <code>js/fb.js</code> is available.
+        </div>
+
+        <!-- Auto-detected cards -->
+        <div class="row">
+            <!-- Card 1: Runtime -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">Runtime</div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tbody>
+                                <tr><td class="fw-bold">FB.version</td><td id="rt-version" class="loading">loading...</td></tr>
+                                <tr><td class="fw-bold">environment</td><td id="rt-environment" class="loading">loading...</td></tr>
+                                <tr><td class="fw-bold">isJXBrowser</td><td id="rt-jxbrowser" class="loading">loading...</td></tr>
+                                <tr><td class="fw-bold">isWeb</td><td id="rt-web" class="loading">loading...</td></tr>
+                                <tr><td class="fw-bold">isDemo</td><td id="rt-demo" class="loading">loading...</td></tr>
+                                <tr><td class="fw-bold">bridgeVersion</td><td id="rt-bridge" class="loading">loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: User Context -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card">
+                    <div class="card-header bg-success text-white">User Context</div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tbody>
+                                <tr><td class="fw-bold">Company</td><td id="uc-company" class="loading">loading...</td></tr>
+                                <tr><td class="fw-bold">Username</td><td id="uc-username" class="loading">loading...</td></tr>
+                                <tr><td class="fw-bold">Email</td><td id="uc-email" class="loading">loading...</td></tr>
+                                <tr><td class="fw-bold">User ID</td><td id="uc-userid" class="loading">loading...</td></tr>
+                                <tr><td class="fw-bold">Group IDs</td><td id="uc-groups" class="loading">loading...</td></tr>
+                                <tr><td class="fw-bold">Plugin Name</td><td id="uc-plugin" class="loading">loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Module Context -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card">
+                    <div class="card-header bg-info text-white">Module Context</div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tbody>
+                                <tr><td class="fw-bold">Module Name</td><td id="mc-module" class="loading">loading...</td></tr>
+                                <tr><td class="fw-bold">Object ID</td><td id="mc-objectid" class="loading">loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Available Methods -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">Available Methods</div>
+                    <div class="card-body">
+                        <pre id="methods-list" class="pre-scroll mb-0 loading">loading...</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Section -->
+        <div class="row mt-3">
+            <!-- Access Rights Checker -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Access Rights Checker</div>
+                    <div class="card-body">
+                        <div class="input-group">
+                            <input type="text" id="accessRightInput" class="form-control" placeholder="Enter access right name (e.g., Sales Order)">
+                            <button class="btn btn-primary" id="btnCheckAccess">Check</button>
+                        </div>
+                        <div id="accessResult" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log Viewer -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Log Viewer</div>
+                    <div class="card-body">
+                        <div class="btn-group mb-2">
+                            <button class="btn btn-outline-secondary btn-sm" id="btnLogTest">FB.log('test')</button>
+                            <button class="btn btn-outline-danger btn-sm" id="btnLogError">FB.logError('test error')</button>
+                            <button class="btn btn-outline-primary btn-sm" id="btnViewLog">View Log</button>
+                        </div>
+                        <pre id="logOutput" class="pre-scroll border p-2 bg-light mb-0" style="min-height:80px;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Source Accordion -->
+        <div class="accordion mt-4 mb-4" id="viewSourceAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#viewSourceBody">
+                        View Source
+                    </button>
+                </h2>
+                <div id="viewSourceBody" class="accordion-collapse collapse" data-bs-parent="#viewSourceAccordion">
+                    <div class="accordion-body">
+<pre class="bg-dark text-light p-3 rounded"><code>// Detect environment
+console.log(FB.environment);  // 'jxbrowser', 'web', or 'demo'
+console.log(FB.isJXBrowser);  // true/false
+
+// Get user context (async — works on all platforms)
+var company = await FB.getCompanyNameAsync();
+var username = await FB.getUsernameAsync();
+var email = await FB.getUserEmailAsync();
+var userId = await FB.getUserIdAsync();
+var groups = await FB.getUserGroupIdsAsync();
+
+// Check access rights
+var canEdit = await FB.hasAccessRightAsync('Sales Order');
+
+// Logging
+FB.log('Operation completed');
+FB.logError('Something went wrong');
+console.log(FB.logMessages());</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // Check that FB is loaded
+            if (typeof FB === 'undefined') {
+                document.getElementById('errorBanner').classList.remove('d-none');
+                return;
+            }
+
+            // ---------- Sync runtime info (available immediately) ----------
+            function loadRuntime() {
+                try {
+                    document.getElementById('rt-version').textContent = FB.version || '(unknown)';
+                    document.getElementById('rt-environment').textContent = FB.environment || '(unknown)';
+                    document.getElementById('rt-jxbrowser').textContent = String(FB.isJXBrowser);
+                    document.getElementById('rt-web').textContent = String(FB.isWeb);
+                    document.getElementById('rt-demo').textContent = String(FB.isDemo);
+                    document.getElementById('rt-bridge').textContent = FB.bridgeVersion || '(none)';
+
+                    // Remove loading class
+                    document.querySelectorAll('#rt-version,#rt-environment,#rt-jxbrowser,#rt-web,#rt-demo,#rt-bridge')
+                        .forEach(function (el) { el.classList.remove('loading'); });
+                } catch (e) {
+                    console.error('Error loading runtime info:', e);
+                }
+            }
+
+            // ---------- Async user context ----------
+            async function loadUserContext() {
+                var fields = [
+                    { id: 'uc-company', fn: function () { return FB.getCompanyNameAsync(); } },
+                    { id: 'uc-username', fn: function () { return FB.getUsernameAsync(); } },
+                    { id: 'uc-email', fn: function () { return FB.getUserEmailAsync(); } },
+                    { id: 'uc-userid', fn: function () { return FB.getUserIdAsync(); } },
+                    { id: 'uc-groups', fn: function () { return FB.getUserGroupIdsAsync(); } },
+                    { id: 'uc-plugin', fn: function () { return FB.getPluginNameAsync(); } }
+                ];
+
+                for (var i = 0; i < fields.length; i++) {
+                    var f = fields[i];
+                    try {
+                        var val = await f.fn();
+                        var el = document.getElementById(f.id);
+                        if (Array.isArray(val)) {
+                            el.textContent = val.join(', ') || '(none)';
+                        } else {
+                            el.textContent = val != null ? String(val) : '(empty)';
+                        }
+                        el.classList.remove('loading');
+                    } catch (e) {
+                        var el = document.getElementById(f.id);
+                        el.textContent = 'Error: ' + e.message;
+                        el.classList.remove('loading');
+                        el.classList.add('text-danger');
+                    }
+                }
+            }
+
+            // ---------- Async module context ----------
+            async function loadModuleContext() {
+                var fields = [
+                    { id: 'mc-module', fn: function () { return FB.getModuleNameAsync(); } },
+                    { id: 'mc-objectid', fn: function () { return FB.getObjectIdAsync(); } }
+                ];
+
+                for (var i = 0; i < fields.length; i++) {
+                    var f = fields[i];
+                    try {
+                        var val = await f.fn();
+                        var el = document.getElementById(f.id);
+                        el.textContent = val != null ? String(val) : '(empty)';
+                        el.classList.remove('loading');
+                    } catch (e) {
+                        var el = document.getElementById(f.id);
+                        el.textContent = 'Error: ' + e.message;
+                        el.classList.remove('loading');
+                        el.classList.add('text-danger');
+                    }
+                }
+            }
+
+            // ---------- Methods list ----------
+            function loadMethods() {
+                try {
+                    var methods = FB.listMethods();
+                    var el = document.getElementById('methods-list');
+                    el.textContent = methods.join('\n');
+                    el.classList.remove('loading');
+                } catch (e) {
+                    var el = document.getElementById('methods-list');
+                    el.textContent = 'Error: ' + e.message;
+                    el.classList.remove('loading');
+                }
+            }
+
+            // ---------- Access Rights Checker ----------
+            document.getElementById('btnCheckAccess').addEventListener('click', async function () {
+                var rightName = document.getElementById('accessRightInput').value.trim();
+                var resultDiv = document.getElementById('accessResult');
+                if (!rightName) {
+                    resultDiv.innerHTML = '<div class="alert alert-warning py-1">Please enter an access right name.</div>';
+                    return;
+                }
+                try {
+                    FB.setStatus('Checking access right: ' + rightName);
+                    var hasRight = await FB.hasAccessRightAsync(rightName);
+                    var cls = hasRight ? 'success' : 'danger';
+                    resultDiv.innerHTML = '<div class="alert alert-' + cls + ' py-1"><strong>' +
+                        rightName + '</strong>: ' + String(hasRight) + '</div>';
+                    FB.setStatus('');
+                } catch (e) {
+                    resultDiv.innerHTML = '<div class="alert alert-danger py-1">Error: ' + e.message + '</div>';
+                    FB.setStatus('');
+                }
+            });
+
+            // Allow Enter key in access right input
+            document.getElementById('accessRightInput').addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') document.getElementById('btnCheckAccess').click();
+            });
+
+            // ---------- Log Viewer ----------
+            document.getElementById('btnLogTest').addEventListener('click', function () {
+                try {
+                    FB.log('test');
+                    document.getElementById('logOutput').textContent = 'Logged "test" successfully.';
+                } catch (e) {
+                    document.getElementById('logOutput').textContent = 'Error: ' + e.message;
+                }
+            });
+
+            document.getElementById('btnLogError').addEventListener('click', function () {
+                try {
+                    FB.logError('test error');
+                    document.getElementById('logOutput').textContent = 'Logged error "test error" successfully.';
+                } catch (e) {
+                    document.getElementById('logOutput').textContent = 'Error: ' + e.message;
+                }
+            });
+
+            document.getElementById('btnViewLog').addEventListener('click', function () {
+                try {
+                    var messages = FB.logMessages();
+                    document.getElementById('logOutput').textContent = messages || '(no log messages)';
+                } catch (e) {
+                    document.getElementById('logOutput').textContent = 'Error: ' + e.message;
+                }
+            });
+
+            // ---------- Run on load ----------
+            loadRuntime();
+            loadMethods();
+            loadUserContext();
+            loadModuleContext();
+        })();
+    </script>
+</body>
+</html>

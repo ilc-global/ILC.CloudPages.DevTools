@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="fb_path" content="CloudPages:DevTools">
+    <meta name="fb_modules" content="*">
+    <meta name="fb_title" content="SQL Console">
+    <title>SQL Console</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script src="js/fb.js"></script>
+    <script src="js/fishbowl.js"></script>
+    <style>
+        #sqlInput { font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 0.9rem; }
+        .param-row { margin-bottom: 0.25rem; }
+        #boundSql { font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">DevTools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="00_Environment.html">Environment</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="01_SQL_Console.html">SQL Console</a></li>
+                    <li class="nav-item"><a class="nav-link" href="02_Legacy_API_Explorer.html">Legacy API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="03_REST_API_Tester.html">REST API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="04_CSV_Import_Builder.html">CSV Import</a></li>
+                    <li class="nav-item"><a class="nav-link" href="05_Reports_Printing.html">Reports & Print</a></li>
+                    <li class="nav-item"><a class="nav-link" href="06_Navigation_Dialogs.html">Navigation & UI</a></li>
+                    <li class="nav-item"><a class="nav-link" href="07_Files_PluginData.html">Files & Data</a></li>
+                    <li class="nav-item"><a class="nav-link" href="08_Timezone.html">Timezone</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <h1>SQL Console</h1>
+        <p>Interactive SQL query runner with parameterized query support. Results render in a sortable, searchable DataTable.</p>
+
+        <!-- Error banner -->
+        <div id="errorBanner" class="alert alert-danger d-none" role="alert">
+            <strong>FB not loaded.</strong> The fb.js library could not be detected. Ensure <code>js/fb.js</code> is available.
+        </div>
+
+        <!-- SQL Input -->
+        <div class="mb-3">
+            <label for="sqlInput" class="form-label fw-bold">SQL Query</label>
+            <textarea class="form-control" id="sqlInput" rows="12">SELECT so.num AS so_num, customer.name AS customer_name,
+       so.totalPrice AS total_price, so.dateIssued AS date_issued
+FROM so
+    JOIN customer ON customer.id = so.customerId
+WHERE so.statusId IN (20, 25)
+ORDER BY so.dateIssued DESC
+LIMIT 25</textarea>
+        </div>
+
+        <!-- Load from File -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Load from File</label>
+            <div class="input-group">
+                <input type="text" id="filePathInput" class="form-control" placeholder="Relative path (e.g., sql/my_query.sql)">
+                <button class="btn btn-outline-secondary" id="btnLoadFile">Load</button>
+            </div>
+        </div>
+
+        <!-- Parameters -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Parameters</span>
+                <div>
+                    <small class="text-muted me-2">All values are strings (Map&lt;String,String&gt;)</small>
+                    <button class="btn btn-sm btn-outline-primary" id="btnAddParam">Add Parameter</button>
+                </div>
+            </div>
+            <div class="card-body" id="paramsContainer">
+                <!-- Dynamic param rows go here -->
+            </div>
+        </div>
+
+        <!-- Execute buttons -->
+        <div class="mb-3 d-flex align-items-center gap-2">
+            <button class="btn btn-primary" id="btnRunSync">Run (Sync)</button>
+            <button class="btn btn-success" id="btnRunAsync">Run (Async)</button>
+            <span id="rowCountBadge" class="badge bg-secondary d-none">0 rows</span>
+            <span id="execTimeBadge" class="badge bg-info d-none">0 ms</span>
+        </div>
+
+        <!-- Error output -->
+        <div id="queryError" class="alert alert-danger d-none" role="alert"></div>
+
+        <!-- Results DataTable -->
+        <div class="mb-3" id="resultsWrapper" style="display:none;">
+            <table id="resultsTable" class="table table-striped table-bordered table-sm" style="width:100%">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Bound SQL Preview -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Bound SQL Preview</label>
+            <pre id="boundSql" class="border p-2 bg-light" style="min-height:40px; white-space: pre-wrap;"></pre>
+        </div>
+
+        <!-- View Source Accordion -->
+        <div class="accordion mt-4 mb-4" id="viewSourceAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#viewSourceBody">
+                        View Source
+                    </button>
+                </h2>
+                <div id="viewSourceBody" class="accordion-collapse collapse" data-bs-parent="#viewSourceAccordion">
+                    <div class="accordion-body">
+<pre class="bg-dark text-light p-3 rounded"><code>// Parameterized query (async — recommended)
+var rows = await FB.queryAsync(
+    'SELECT * FROM customer WHERE id = :id',
+    { id: '42' }  // All values must be strings
+);
+
+// Parameterized query (sync — JXBrowser only)
+var rows = FB.query(
+    'SELECT * FROM so WHERE customerId = :cust AND statusId = :status',
+    { cust: '123', status: '20' }
+);
+
+// Load SQL from file
+var sql = await FB.getResourceFileAsync('sql/my_query.sql');
+var rows = await FB.queryAsync(sql, params);</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // Check that FB is loaded
+            if (typeof FB === 'undefined') {
+                document.getElementById('errorBanner').classList.remove('d-none');
+                return;
+            }
+
+            var dataTable = null;
+
+            // ---------- Parameter Management ----------
+            function addParamRow(key, value) {
+                var container = document.getElementById('paramsContainer');
+                var row = document.createElement('div');
+                row.className = 'param-row d-flex gap-2 align-items-center';
+                row.innerHTML =
+                    '<input type="text" class="form-control form-control-sm param-key" placeholder="Key (e.g., id)" value="' + (key || '') + '" style="max-width:200px;">' +
+                    '<input type="text" class="form-control form-control-sm param-value" placeholder="Value (string)" value="' + (value || '') + '">' +
+                    '<button class="btn btn-sm btn-outline-danger btn-remove-param" title="Remove">&times;</button>';
+                container.appendChild(row);
+
+                row.querySelector('.btn-remove-param').addEventListener('click', function () {
+                    row.remove();
+                });
+            }
+
+            document.getElementById('btnAddParam').addEventListener('click', function () {
+                addParamRow('', '');
+            });
+
+            function collectParams() {
+                var params = {};
+                var rows = document.querySelectorAll('.param-row');
+                rows.forEach(function (row) {
+                    var key = row.querySelector('.param-key').value.trim();
+                    var val = row.querySelector('.param-value').value;
+                    if (key) {
+                        params[key] = val;
+                    }
+                });
+                return params;
+            }
+
+            // ---------- Bound SQL Preview ----------
+            function updateBoundSql() {
+                var sql = document.getElementById('sqlInput').value;
+                var params = collectParams();
+                var bound = sql;
+                Object.keys(params).forEach(function (key) {
+                    bound = bound.replace(new RegExp(':' + key + '\\b', 'g'), "'" + params[key] + "'");
+                });
+                document.getElementById('boundSql').textContent = bound;
+            }
+
+            document.getElementById('sqlInput').addEventListener('input', updateBoundSql);
+            // Update on param changes (delegate)
+            document.getElementById('paramsContainer').addEventListener('input', updateBoundSql);
+
+            // ---------- snake_case to Title Case ----------
+            function toTitleCase(str) {
+                return str.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+            }
+
+            // ---------- Render Results ----------
+            function renderResults(rows, execTime) {
+                var errorDiv = document.getElementById('queryError');
+                errorDiv.classList.add('d-none');
+
+                var rowCountBadge = document.getElementById('rowCountBadge');
+                var execTimeBadge = document.getElementById('execTimeBadge');
+
+                // Destroy existing DataTable
+                if (dataTable) {
+                    dataTable.destroy();
+                    dataTable = null;
+                }
+
+                var wrapper = document.getElementById('resultsWrapper');
+                var table = document.getElementById('resultsTable');
+
+                if (!rows || rows.length === 0) {
+                    wrapper.style.display = 'none';
+                    rowCountBadge.textContent = '0 rows';
+                    rowCountBadge.classList.remove('d-none');
+                    execTimeBadge.textContent = execTime + ' ms';
+                    execTimeBadge.classList.remove('d-none');
+                    return;
+                }
+
+                // Auto-detect columns from first row
+                var columns = Object.keys(rows[0]);
+                var dtColumns = columns.map(function (col) {
+                    return { title: toTitleCase(col), data: col, defaultContent: '' };
+                });
+
+                // Clear and rebuild table HTML
+                table.innerHTML = '<thead><tr>' +
+                    columns.map(function (c) { return '<th>' + toTitleCase(c) + '</th>'; }).join('') +
+                    '</tr></thead><tbody></tbody>';
+
+                wrapper.style.display = 'block';
+
+                // Initialize DataTable
+                dataTable = $('#resultsTable').DataTable({
+                    data: rows,
+                    columns: dtColumns,
+                    pageLength: 25,
+                    order: [],
+                    destroy: true,
+                    scrollX: true
+                });
+
+                rowCountBadge.textContent = rows.length + ' row' + (rows.length !== 1 ? 's' : '');
+                rowCountBadge.classList.remove('d-none');
+                execTimeBadge.textContent = execTime + ' ms';
+                execTimeBadge.classList.remove('d-none');
+            }
+
+            function showError(msg) {
+                var errorDiv = document.getElementById('queryError');
+                errorDiv.textContent = msg;
+                errorDiv.classList.remove('d-none');
+                document.getElementById('resultsWrapper').style.display = 'none';
+                document.getElementById('rowCountBadge').classList.add('d-none');
+                document.getElementById('execTimeBadge').classList.add('d-none');
+            }
+
+            // ---------- Run Sync ----------
+            document.getElementById('btnRunSync').addEventListener('click', function () {
+                var sql = document.getElementById('sqlInput').value.trim();
+                if (!sql) { showError('Please enter a SQL query.'); return; }
+
+                var params = collectParams();
+                updateBoundSql();
+
+                try {
+                    FB.setStatus('Executing query (sync)...');
+                    var start = performance.now();
+                    var rows = FB.query(sql, Object.keys(params).length > 0 ? params : undefined);
+                    var elapsed = Math.round(performance.now() - start);
+                    FB.setStatus('Query completed (' + elapsed + ' ms)');
+                    renderResults(rows, elapsed);
+                } catch (e) {
+                    FB.setStatus('');
+                    showError(e.message || String(e));
+                }
+            });
+
+            // ---------- Run Async ----------
+            document.getElementById('btnRunAsync').addEventListener('click', async function () {
+                var sql = document.getElementById('sqlInput').value.trim();
+                if (!sql) { showError('Please enter a SQL query.'); return; }
+
+                var params = collectParams();
+                updateBoundSql();
+
+                try {
+                    FB.setStatus('Executing query (async)...');
+                    var start = performance.now();
+                    var rows = await FB.queryAsync(sql, Object.keys(params).length > 0 ? params : undefined);
+                    var elapsed = Math.round(performance.now() - start);
+                    FB.setStatus('Query completed (' + elapsed + ' ms)');
+                    renderResults(rows, elapsed);
+                } catch (e) {
+                    FB.setStatus('');
+                    showError(e.message || String(e));
+                }
+            });
+
+            // ---------- Load from File ----------
+            document.getElementById('btnLoadFile').addEventListener('click', async function () {
+                var path = document.getElementById('filePathInput').value.trim();
+                if (!path) {
+                    showError('Please enter a file path.');
+                    return;
+                }
+                try {
+                    FB.setStatus('Loading file: ' + path);
+                    var content = await FB.getResourceFileAsync(path);
+                    document.getElementById('sqlInput').value = content;
+                    updateBoundSql();
+                    FB.setStatus('File loaded: ' + path);
+                } catch (e) {
+                    showError('Failed to load file: ' + e.message);
+                    FB.setStatus('');
+                }
+            });
+
+            // Initial bound SQL preview
+            updateBoundSql();
+        })();
+    </script>
+</body>
+</html>
