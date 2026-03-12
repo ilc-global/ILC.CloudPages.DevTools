@@ -90,6 +90,7 @@
                                 <tr><td>Category</td><td id="schema-category"></td></tr>
                                 <tr><td>Array Paths</td><td id="schema-arrays"></td></tr>
                                 <tr><td>Fields</td><td id="schema-fields"></td></tr>
+                                <tr id="schema-csv-row" class="d-none"><td>CSV Import</td><td id="schema-csv"></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -168,10 +169,23 @@ var apiList = FishbowlJSON.listApiCalls();  // Returns sorted enum names
 
 // Get schema for an API call
 var schema = FishbowlJSON.getApiSchema('PART_GET');
-// schema = { enumName, baseName, category, arrayPaths }
+// schema = { enumName, baseName, category, arrayPaths, fields, csvImport? }
+
+// Check request fields
+// schema.fields = { Number: 'string', GetImage: 'boolean' }
+
+// Check if a CSV Import alternative exists
+// schema.csvImport = ['ImportPart'] — if present, consider using CSV import instead
+// Fishbowl's CSV imports are generally more robust than the legacy API
 
 // ensureArray — fix XML-to-JSON single-value lists
-var items = FishbowlJSON.ensureArray(response.Items.Item);</code></pre>
+var items = FishbowlJSON.ensureArray(response.Items.Item);
+
+// CSV Import alternative (often more reliable for write operations)
+var imp = FishbowlCSV.create('ImportMemoData', [
+    { ModuleName: 'SalesOrder', RecordData: '50001', Memo: 'Test memo' }
+]);
+var result = await FB.importCSVAsync('ImportMemoData', imp.toCSV());</code></pre>
                     </div>
                 </div>
             </div>
@@ -240,8 +254,14 @@ var items = FishbowlJSON.ensureArray(response.Items.Item);</code></pre>
                     filtered.forEach(function (item) {
                         var div = document.createElement('div');
                         div.className = 'api-item' + (item.enumName === selectedEnum ? ' active' : '');
-                        div.textContent = item.enumName;
                         div.dataset.enumName = item.enumName;
+                        var schema = FishbowlJSON.getApiSchema(item.enumName);
+                        if (schema && schema.csvImport && schema.csvImport.length > 0) {
+                            div.innerHTML = escapeHtml(item.enumName) +
+                                ' <span class="badge bg-info text-dark" style="font-size:0.6rem;vertical-align:middle;" title="CSV Import alternative available">CSV</span>';
+                        } else {
+                            div.textContent = item.enumName;
+                        }
                         div.addEventListener('click', function () {
                             selectApi(item.enumName);
                         });
@@ -292,6 +312,23 @@ var items = FishbowlJSON.ensureArray(response.Items.Item);</code></pre>
                     }).join('<br>');
                 } else {
                     fieldsEl.textContent = '(none — no parameters required)';
+                }
+
+                // Show CSV Import alternatives
+                var csvRow = document.getElementById('schema-csv-row');
+                var csvEl = document.getElementById('schema-csv');
+                if (schema.csvImport && schema.csvImport.length > 0) {
+                    csvRow.classList.remove('d-none');
+                    csvEl.innerHTML =
+                        '<div class="mb-1"><span class="badge bg-info text-dark">CSV Import available</span> ' +
+                        '<small class="text-muted">— Fishbowl CSV imports are often more reliable than the legacy API</small></div>' +
+                        schema.csvImport.map(function (t) {
+                            return '<a href="04_CSV_Import_Builder.html" class="text-decoration-none">' +
+                                '<code>' + escapeHtml(t) + '</code></a>';
+                        }).join(', ');
+                } else {
+                    csvRow.classList.add('d-none');
+                    csvEl.innerHTML = '';
                 }
 
                 // Pre-fill request with fields template

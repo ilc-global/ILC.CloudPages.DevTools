@@ -986,6 +986,8 @@
      * @param {string} schema.baseName - Request base name (e.g., 'PartGet')
      * @param {string} schema.category - Grouping for documentation
      * @param {string[]} [schema.arrayPaths] - Response paths that should always be arrays
+     * @param {object} [schema.fields] - Request field definitions { FieldName: 'type', ... }
+     * @param {string[]} [schema.csvImport] - CSV import types that overlap with this API call
      */
     function registerApi(schema) {
         _apiSchemas[schema.enumName] = schema;
@@ -1093,7 +1095,8 @@
             Tracking: 'Tracking',
             LocationTagNum: 'int',
             TagNum: 'int'
-        }
+        },
+        csvImport: ['ImportAddInventory']
     });
 
     registerApi({
@@ -1118,7 +1121,8 @@
             Quantity: 'double',
             LocationID: 'int',
             Tracking: 'Tracking'
-        }
+        },
+        csvImport: ['ImportCycleCountData']
     });
 
     registerApi({
@@ -1156,7 +1160,8 @@
             Tracking: 'Tracking',
             DestinationLocation: 'Location',
             Note: 'string'
-        }
+        },
+        csvImport: ['ImportInventoryMove']
     });
 
     registerApi({
@@ -1171,7 +1176,8 @@
             CustomerName: 'string',
             Note: 'string',
             Tracking: 'Tracking'
-        }
+        },
+        csvImport: ['ImportScrapData']
     });
 
     registerApi({
@@ -1221,7 +1227,8 @@
         arrayPaths: [],
         fields: {
             Part: 'Part'
-        }
+        },
+        csvImport: ['ImportPart', 'ImportPartProductVendorPricing']
     });
 
     registerApi({
@@ -1231,7 +1238,8 @@
         arrayPaths: [],
         fields: {
             PartNum: 'string'
-        }
+        },
+        csvImport: ['ImportPartCost', 'ImportPartStandardCost']
     });
 
     registerApi({
@@ -1254,7 +1262,8 @@
             PartNumber: 'string',
             UPC: 'string',
             UpdateProducts: 'boolean'
-        }
+        },
+        csvImport: ['ImportPart']
     });
 
     registerApi({
@@ -1292,7 +1301,8 @@
             SalesOrder: 'SalesOrder',
             IssueFlag: 'boolean',
             IgnoreItems: 'boolean'
-        }
+        },
+        csvImport: ['ImportSalesOrder', 'ImportSalesOrderDetails']
     });
 
     registerApi({
@@ -1370,7 +1380,8 @@
         arrayPaths: [],
         fields: {
             SONumber: 'string'
-        }
+        },
+        csvImport: ['ImportSalesOrder']
     });
 
     registerApi({
@@ -1421,7 +1432,8 @@
         fields: {
             OrderNum: 'string',
             SalesOrderItem: 'SalesOrderItem'
-        }
+        },
+        csvImport: ['ImportSalesOrder']
     });
 
     registerApi({
@@ -1433,7 +1445,8 @@
             SONumber: 'string',
             FulfillServiceItems: 'boolean',
             LocationGroup: 'string'
-        }
+        },
+        csvImport: ['ImportShippingData']
     });
 
     // -------------------------------------------------------------------------
@@ -1460,7 +1473,8 @@
         arrayPaths: [],
         fields: {
             Customer: 'Customer'
-        }
+        },
+        csvImport: ['ImportCustomers']
     });
 
     registerApi({
@@ -1506,7 +1520,8 @@
         arrayPaths: [],
         fields: {
             Vendor: 'Vendor'
-        }
+        },
+        csvImport: ['ImportVendors']
     });
 
     registerApi({
@@ -1552,7 +1567,8 @@
             CustomerName: 'string',
             Quantity: 'int',
             Date: 'date'
-        }
+        },
+        csvImport: ['ImportProductPricing']
     });
 
     registerApi({
@@ -1588,7 +1604,8 @@
         fields: {
             PurchaseOrder: 'PurchaseOrder',
             IssueFlag: 'boolean'
-        }
+        },
+        csvImport: ['ImportPurchaseOrder']
     });
 
     registerApi({
@@ -1623,7 +1640,8 @@
         arrayPaths: [],
         fields: {
             Receipt: 'Receipt'
-        }
+        },
+        csvImport: ['ImportReceivingData']
     });
 
     // -------------------------------------------------------------------------
@@ -1640,7 +1658,8 @@
             FulfillService: 'boolean',
             OrderNums: 'array',
             ShipNum: 'string'
-        }
+        },
+        csvImport: ['ImportShippingData']
     });
 
     registerApi({
@@ -1700,7 +1719,8 @@
         arrayPaths: [],
         fields: {
             ShipNum: 'string'
-        }
+        },
+        csvImport: ['ImportShippingData']
     });
 
     registerApi({
@@ -1738,7 +1758,8 @@
         arrayPaths: [],
         fields: {
             Pick: 'Pick'
-        }
+        },
+        csvImport: ['ImportPickingData']
     });
 
     registerApi({
@@ -1803,7 +1824,8 @@
         arrayPaths: [],
         fields: {
             Payment: 'Payment'
-        }
+        },
+        csvImport: ['ImportPaymentData']
     });
 
     registerApi({
@@ -1839,7 +1861,8 @@
             BomNumber: 'string',
             Quantity: 'string',
             LocationGroupName: 'string'
-        }
+        },
+        csvImport: ['ImportBillOfMaterials']
     });
 
     registerApi({
@@ -1863,7 +1886,8 @@
         fields: {
             WO: 'WO',
             SplitWorkOrder: 'boolean'
-        }
+        },
+        csvImport: ['ImportBillOfMaterials', 'ImportBillOfMaterialsDetails']
     });
 
     registerApi({
@@ -1903,7 +1927,8 @@
             PartNum: 'string',
             Quantity: 'double',
             UOMCode: 'string'
-        }
+        },
+        csvImport: ['ImportBillOfMaterials']
     });
 
     registerApi({
@@ -1977,7 +2002,8 @@
         fields: {
             PartNum: 'string',
             Location: 'Location'
-        }
+        },
+        csvImport: ['ImportDefaultLocations']
     });
 
     // -------------------------------------------------------------------------
@@ -2071,7 +2097,8 @@
             OrderNum: 'string',
             CustomerName: 'string',
             VendorName: 'string'
-        }
+        },
+        csvImport: ['ImportMemoData']
     });
 
     registerApi({
@@ -2345,7 +2372,8 @@
         fields: {
             TransferOrder: 'TransferOrder',
             IssueFlag: 'boolean'
-        }
+        },
+        csvImport: ['ImportTransferOrder']
     });
 
     // -------------------------------------------------------------------------
@@ -2367,7 +2395,8 @@
         arrayPaths: [],
         fields: {
             Discount: 'Discount'
-        }
+        },
+        csvImport: ['ImportDiscounts']
     });
 
     registerApi({
@@ -2385,7 +2414,8 @@
         arrayPaths: [],
         fields: {
             TaxRate: 'TaxRate'
-        }
+        },
+        csvImport: ['ImportTaxRates']
     });
 
     // -------------------------------------------------------------------------
