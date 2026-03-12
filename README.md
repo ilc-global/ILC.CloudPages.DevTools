@@ -1,6 +1,6 @@
 # ILC.CloudPages.DevTools
 
-Interactive developer tools for [fb.js](https://github.com/ilc-global/ILC.Fishbowl.JS) and fishbowl.js. Each page is a working diagnostic/testing tool — not a static demo.
+Interactive developer tools for [fb.js and fishbowl.js](https://github.com/ilc-global/ILC.Fishbowl.JS). Each page is a working diagnostic/testing tool — not a static demo.
 
 ## Pages
 
@@ -16,15 +16,22 @@ Interactive developer tools for [fb.js](https://github.com/ilc-global/ILC.Fishbo
 | 07 | [Files & Plugin Data](07_Files_PluginData.html) | Read/save files, plugin data CRUD |
 | 08 | [Timezone](08_Timezone.html) | Server/client time conversion, multi-timezone comparison |
 
-## Setup
+## fb.js and fishbowl.js
 
-Copy `fb.js` and `fishbowl.js` into the `js/` directory:
+This repo depends on [ILC.Fishbowl.JS](https://github.com/ilc-global/ILC.Fishbowl.JS), which provides:
+
+- **fb.js** — Cross-platform client library for Fishbowl (JXBrowser, Web, Demo adapters)
+- **fishbowl.js** — API call registry (109 calls), CSV import builder (56 types), response normalization
+
+Copies of both files are included in `js/` for development convenience. These are **point-in-time copies** — if the upstream [ILC.Fishbowl.JS](https://github.com/ilc-global/ILC.Fishbowl.JS) repo is updated, the copies here may become outdated or incompatible. Check the upstream repo for the latest versions.
+
+## Setup
 
 ```
 ILC.CloudPages.DevTools/
 ├── js/
-│   ├── fb.js           # from ILC.Fishbowl.JS
-│   └── fishbowl.js     # from ILC.Fishbowl.JS
+│   ├── fb.js           # copied from ILC.Fishbowl.JS
+│   └── fishbowl.js     # copied from ILC.Fishbowl.JS
 ├── sql/
 │   └── 03_Query.sql    # sample SQL file for SQL Console
 ├── 00_Environment.html
@@ -37,10 +44,10 @@ To use in Fishbowl, copy the HTML files and `js/` folder into your CloudPages pl
 
 ## Dependencies
 
-| Library | Loaded via | Used by |
-|---------|-----------|---------|
-| [fb.js](https://github.com/ilc-global/ILC.Fishbowl.JS) | Local (`js/fb.js`) | All pages |
-| [fishbowl.js](https://github.com/ilc-global/ILC.Fishbowl.JS) | Local (`js/fishbowl.js`) | 02 Legacy API, 04 CSV Import |
+| Library | Source | Used by |
+|---------|--------|---------|
+| [fb.js](https://github.com/ilc-global/ILC.Fishbowl.JS) | Local copy (`js/fb.js`) | All pages |
+| [fishbowl.js](https://github.com/ilc-global/ILC.Fishbowl.JS) | Local copy (`js/fishbowl.js`) | 02 Legacy API, 04 CSV Import |
 | Bootstrap 5.3 | CDN | All pages |
 | jQuery 3.7 | CDN | 01 SQL Console |
 | DataTables 1.13 | CDN | 01 SQL Console |
