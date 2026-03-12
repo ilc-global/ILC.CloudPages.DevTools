@@ -323,7 +323,7 @@ var result = await FB.importCSVAsync('ImportMemoData', imp.toCSV());</code></pre
                         '<div class="mb-1"><span class="badge bg-info text-dark">CSV Import available</span> ' +
                         '<small class="text-muted">— Fishbowl CSV imports are often more reliable than the legacy API</small></div>' +
                         schema.csvImport.map(function (t) {
-                            return '<a href="04_CSV_Import_Builder.html" class="text-decoration-none">' +
+                            return '<a href="04_CSV_Import_Builder.html#' + encodeURIComponent(t) + '" class="text-decoration-none">' +
                                 '<code>' + escapeHtml(t) + '</code></a>';
                         }).join(', ');
                 } else {
