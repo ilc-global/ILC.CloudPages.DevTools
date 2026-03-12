@@ -1083,56 +1083,106 @@
         enumName: 'ADD_INVENTORY',
         baseName: 'AddInventory',
         category: 'inventory',
-        arrayPaths: ['AddInventoryRs.PartTracking.PartTrackingItem']
+        arrayPaths: ['AddInventoryRs.PartTracking.PartTrackingItem'],
+        fields: {
+            PartNum: 'string',
+            Quantity: 'string',
+            UOMID: 'int',
+            Cost: 'string',
+            Note: 'string',
+            Tracking: 'Tracking',
+            LocationTagNum: 'int',
+            TagNum: 'int'
+        }
     });
 
     registerApi({
         enumName: 'ADJUST_INVENTORY',
         baseName: 'AdjustInventory',
         category: 'inventory',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            TagNum: 'string',
+            Quantity: 'string',
+            Tracking: 'Tracking'
+        }
     });
 
     registerApi({
         enumName: 'CYCLE_COUNT',
         baseName: 'CycleCount',
         category: 'inventory',
-        arrayPaths: ['CycleCountItem']
+        arrayPaths: ['CycleCountItem'],
+        fields: {
+            PartNum: 'string',
+            Quantity: 'double',
+            LocationID: 'int',
+            Tracking: 'Tracking'
+        }
     });
 
     registerApi({
         enumName: 'GET_TOTAL_INVENTORY',
         baseName: 'GetTotalInventory',
         category: 'inventory',
-        arrayPaths: ['TotalInventory.TotalInventoryItem']
+        arrayPaths: ['TotalInventory.TotalInventoryItem'],
+        fields: {
+            PartNumber: 'string',
+            LocationGroup: 'string'
+        }
     });
 
     registerApi({
         enumName: 'INV_QTY',
         baseName: 'InvQty',
         category: 'inventory',
-        arrayPaths: ['InvQty.InvQtyItem']
+        arrayPaths: ['InvQty.InvQtyItem'],
+        fields: {
+            PartNum: 'string',
+            ModifiedFrom: 'date',
+            ModifiedTo: 'date'
+        }
     });
 
     registerApi({
         enumName: 'MOVE',
         baseName: 'Move',
         category: 'inventory',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            SourceLocation: 'Location',
+            Part: 'Part',
+            Quantity: 'double',
+            Tracking: 'Tracking',
+            DestinationLocation: 'Location',
+            Note: 'string'
+        }
     });
 
     registerApi({
         enumName: 'SCRAP_INVENTORY',
         baseName: 'ScrapInventory',
         category: 'inventory',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            LocationTagNum: 'int',
+            PartNumber: 'string',
+            Quantity: 'string',
+            CustomerName: 'string',
+            Note: 'string',
+            Tracking: 'Tracking'
+        }
     });
 
     registerApi({
         enumName: 'TAG_INFO',
         baseName: 'TagInfo',
         category: 'inventory',
-        arrayPaths: ['Tag.Tracking.TrackingItem']
+        arrayPaths: ['Tag.Tracking.TrackingItem'],
+        fields: {
+            TagID: 'int',
+            Num: 'int'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1146,49 +1196,73 @@
         arrayPaths: [
             'Part.PartTrackingList.PartTracking',
             'Part.CustomFieldList.CustomField'
-        ]
+        ],
+        fields: {
+            Number: 'string',
+            GetImage: 'boolean'
+        }
     });
 
     registerApi({
         enumName: 'PART_QUERY',
         baseName: 'PartQuery',
         category: 'part',
-        arrayPaths: ['Part']
+        arrayPaths: ['Part'],
+        fields: {
+            PartNum: 'string',
+            LocationGroup: 'string'
+        }
     });
 
     registerApi({
         enumName: 'PART_SAVE',
         baseName: 'PartSave',
         category: 'part',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Part: 'Part'
+        }
     });
 
     registerApi({
         enumName: 'PART_COST',
         baseName: 'PartCost',
         category: 'part',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            PartNum: 'string'
+        }
     });
 
     registerApi({
         enumName: 'PART_TAG_QUERY',
         baseName: 'PartTagQuery',
         category: 'part',
-        arrayPaths: ['Tag']
+        arrayPaths: ['Tag'],
+        fields: {
+            PartNum: 'string',
+            LocationGroup: 'string'
+        }
     });
 
     registerApi({
         enumName: 'SAVE_UPC',
         baseName: 'SaveUPC',
         category: 'part',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            PartNumber: 'string',
+            UPC: 'string',
+            UpdateProducts: 'boolean'
+        }
     });
 
     registerApi({
         enumName: 'GET_PART_TRACKING_LIST',
         baseName: 'GetPartTrackingList',
         category: 'part',
-        arrayPaths: ['PartTracking']
+        arrayPaths: ['PartTracking'],
+        fields: {}
     });
 
     // -------------------------------------------------------------------------
@@ -1203,77 +1277,163 @@
             'SalesOrder.Items.SalesOrderItem',
             'SalesOrder.Items.SalesOrderItem.CustomFieldList.CustomField',
             'SalesOrder.CustomFieldList.CustomField'
-        ]
+        ],
+        fields: {
+            Number: 'string'
+        }
     });
 
     registerApi({
         enumName: 'SO_SAVE',
         baseName: 'SOSave',
         category: 'salesorder',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            SalesOrder: 'SalesOrder',
+            IssueFlag: 'boolean',
+            IgnoreItems: 'boolean'
+        }
     });
 
     registerApi({
         enumName: 'GET_SO_LIST',
         baseName: 'GetSOList',
         category: 'salesorder',
-        arrayPaths: ['SalesOrder']
+        arrayPaths: ['SalesOrder'],
+        fields: {
+            LocationGroup: 'string',
+            SONum: 'string',
+            Status: 'string',
+            CustomerPO: 'string',
+            VendorPO: 'string',
+            CustomerName: 'string',
+            AccountNumber: 'string',
+            BillTo: 'string',
+            ShipTo: 'string',
+            ProductNum: 'string',
+            ProductDesc: 'string',
+            ProductDetails: 'string',
+            Salesman: 'string',
+            Type: 'string',
+            DateIssuedFrom: 'date',
+            DateIssuedTo: 'date',
+            DateCreatedFrom: 'date',
+            DateCreatedTo: 'date',
+            DateLastModifiedFrom: 'date',
+            DateLastModifiedTo: 'date',
+            DateScheduledFrom: 'date',
+            DateScheduledTo: 'date',
+            DateCompletedFrom: 'date',
+            DateCompletedTo: 'date'
+        }
     });
 
     registerApi({
         enumName: 'GET_SO_SEARCH_LIST',
         baseName: 'GetSOSearchList',
         category: 'salesorder',
-        arrayPaths: ['SalesOrder']
+        arrayPaths: ['SalesOrder'],
+        fields: {
+            StartIndex: 'int',
+            RecordCount: 'int',
+            LocationGroup: 'string',
+            SONum: 'string',
+            Status: 'string',
+            CustomerPO: 'string',
+            VendorPO: 'string',
+            CustomerName: 'string',
+            AccountNumber: 'string',
+            BillTo: 'string',
+            ShipTo: 'string',
+            ProductNum: 'string',
+            ProductDesc: 'string',
+            ProductDetails: 'string',
+            Salesman: 'string',
+            Type: 'string',
+            DateIssuedFrom: 'date',
+            DateIssuedTo: 'date',
+            DateCreatedFrom: 'date',
+            DateCreatedTo: 'date',
+            DateLastModifiedFrom: 'date',
+            DateLastModifiedTo: 'date',
+            DateScheduledFrom: 'date',
+            DateScheduledTo: 'date',
+            DateCompletedFrom: 'date',
+            DateCompletedTo: 'date'
+        }
     });
 
     registerApi({
         enumName: 'ISSUE_SO',
         baseName: 'IssueSO',
         category: 'salesorder',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            SONumber: 'string'
+        }
     });
 
     registerApi({
         enumName: 'UNISSUE_SO',
         baseName: 'UnissueSO',
         category: 'salesorder',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            SONumber: 'string'
+        }
     });
 
     registerApi({
         enumName: 'CLOSE_SHORT_SO',
         baseName: 'CloseShortSO',
         category: 'salesorder',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            SONumber: 'string'
+        }
     });
 
     registerApi({
         enumName: 'VOID_SO',
         baseName: 'VoidSO',
         category: 'salesorder',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            SONumber: 'string'
+        }
     });
 
     registerApi({
         enumName: 'CALCULATE_SO',
         baseName: 'CalculateSO',
         category: 'salesorder',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            SalesOrder: 'SalesOrder'
+        }
     });
 
     registerApi({
         enumName: 'ADD_SO_ITEM',
         baseName: 'AddSOItem',
         category: 'salesorder',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            OrderNum: 'string',
+            SalesOrderItem: 'SalesOrderItem'
+        }
     });
 
     registerApi({
         enumName: 'QUICK_SHIP',
         baseName: 'QuickShip',
         category: 'salesorder',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            SONumber: 'string',
+            FulfillServiceItems: 'boolean',
+            LocationGroup: 'string'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1287,28 +1447,36 @@
         arrayPaths: [
             'Customer.Addresses.Address',
             'Customer.CustomFieldList.CustomField'
-        ]
+        ],
+        fields: {
+            Name: 'string'
+        }
     });
 
     registerApi({
         enumName: 'CUSTOMER_SAVE',
         baseName: 'CustomerSave',
         category: 'sales',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Customer: 'Customer'
+        }
     });
 
     registerApi({
         enumName: 'CUSTOMER_LIST',
         baseName: 'CustomerList',
         category: 'sales',
-        arrayPaths: ['Customer']
+        arrayPaths: ['Customer'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'CUSTOMER_NAME_LIST',
         baseName: 'CustomerNameList',
         category: 'sales',
-        arrayPaths: ['Customer']
+        arrayPaths: ['Customer'],
+        fields: {}
     });
 
     // NOTE: CUSTOMER_GROUP_RELATIONS does not exist in Java ApiCallType enum.
@@ -1325,28 +1493,36 @@
         arrayPaths: [
             'Vendor.Addresses.Address',
             'Vendor.CustomFieldList.CustomField'
-        ]
+        ],
+        fields: {
+            Name: 'string'
+        }
     });
 
     registerApi({
         enumName: 'VENDOR_SAVE',
         baseName: 'VendorSave',
         category: 'purchasing',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Vendor: 'Vendor'
+        }
     });
 
     registerApi({
         enumName: 'VENDOR_LIST',
         baseName: 'VendorList',
         category: 'purchasing',
-        arrayPaths: ['Vendor']
+        arrayPaths: ['Vendor'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'VENDOR_NAME_LIST',
         baseName: 'VendorNameList',
         category: 'purchasing',
-        arrayPaths: ['Vendor']
+        arrayPaths: ['Vendor'],
+        fields: {}
     });
 
     // -------------------------------------------------------------------------
@@ -1359,39 +1535,70 @@
         category: 'product',
         arrayPaths: [
             'Product.CustomFieldList.CustomField'
-        ]
+        ],
+        fields: {
+            Number: 'string',
+            GetImage: 'boolean'
+        }
     });
 
     registerApi({
         enumName: 'PRODUCT_PRICE',
         baseName: 'ProductPrice',
         category: 'product',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            ProductNumber: 'string',
+            CustomerName: 'string',
+            Quantity: 'int',
+            Date: 'date'
+        }
     });
 
     registerApi({
         enumName: 'GET_PRODUCT_LIST',
         baseName: 'GetProductList',
         category: 'product',
-        arrayPaths: ['Product']
+        arrayPaths: ['Product'],
+        fields: {
+            ProductNumber: 'string',
+            ProductUPC: 'string',
+            ProductDescription: 'string',
+            ProductDetails: 'string',
+            ProductSKU: 'string',
+            PartNumber: 'string',
+            PartUPC: 'string',
+            PartDescription: 'string',
+            ShowActive: 'boolean',
+            ShowInactive: 'boolean',
+            StartIndex: 'int',
+            RecordCount: 'int'
+        }
     });
 
     // -------------------------------------------------------------------------
-    // Purchase Order (3)
+    // Purchase Order (4)
     // -------------------------------------------------------------------------
 
     registerApi({
         enumName: 'PO_SAVE',
         baseName: 'POSave',
         category: 'purchasing',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            PurchaseOrder: 'PurchaseOrder',
+            IssueFlag: 'boolean'
+        }
     });
 
     registerApi({
         enumName: 'GET_PO_LIST',
         baseName: 'GetPOList',
         category: 'purchasing',
-        arrayPaths: ['PurchaseOrder']
+        arrayPaths: ['PurchaseOrder'],
+        fields: {
+            LocationGroup: 'string'
+        }
     });
 
     registerApi({
@@ -1401,14 +1608,22 @@
         arrayPaths: [
             'Receipt.ReceiptItem',
             'Receipt.ReceiptItem.Tracking.TrackingItem'
-        ]
+        ],
+        fields: {
+            OrderNumber: 'string',
+            OrderType: 'int',
+            LocationGroup: 'int'
+        }
     });
 
     registerApi({
         enumName: 'SAVE_RECEIPT',
         baseName: 'SaveReceipt',
         category: 'purchasing',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Receipt: 'Receipt'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1419,7 +1634,13 @@
         enumName: 'SHIP',
         baseName: 'Ship',
         category: 'shipping',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            ShipDate: 'date',
+            FulfillService: 'boolean',
+            OrderNums: 'array',
+            ShipNum: 'string'
+        }
     });
 
     registerApi({
@@ -1430,42 +1651,66 @@
             'Shipment.ShipmentItem',
             'Shipment.Carton',
             'Shipment.Carton.CartonItem'
-        ]
+        ],
+        fields: {
+            ShipmentID: 'int'
+        }
     });
 
     registerApi({
         enumName: 'SAVE_SHIPMENT',
         baseName: 'SaveShipment',
         category: 'shipping',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Shipment: 'Shipment'
+        }
     });
 
     registerApi({
         enumName: 'GET_SHIP_LIST',
         baseName: 'GetShipList',
         category: 'shipping',
-        arrayPaths: ['Shipment']
+        arrayPaths: ['Shipment'],
+        fields: {
+            StatusID: 'int',
+            LocationGroup: 'string',
+            StartRecord: 'int',
+            RecordCount: 'int',
+            OrderNumber: 'int',
+            OrderTypeID: 'int',
+            Carrier: 'int'
+        }
     });
 
     registerApi({
         enumName: 'GET_SHIP_NOW_LIST',
         baseName: 'GetShipNowList',
         category: 'shipping',
-        arrayPaths: ['Shipment']
+        arrayPaths: ['Shipment'],
+        fields: {
+            LocationGroup: 'string'
+        }
     });
 
     registerApi({
         enumName: 'VOID_SHIPMENT',
         baseName: 'VoidShipment',
         category: 'shipping',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            ShipNum: 'string'
+        }
     });
 
     registerApi({
         enumName: 'GET_SHIP_CARTON_TRACKING',
         baseName: 'GetShipCartonTracking',
         category: 'shipping',
-        arrayPaths: ['Carton', 'Carton.TrackingItem']
+        arrayPaths: ['Carton', 'Carton.TrackingItem'],
+        fields: {
+            ShipNum: 'string'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1479,21 +1724,41 @@
         arrayPaths: [
             'Pick.PickItem',
             'Pick.PickItem.Tracking.TrackingItem'
-        ]
+        ],
+        fields: {
+            PickNum: 'string',
+            WONum: 'string'
+        }
     });
 
     registerApi({
         enumName: 'SAVE_PICK',
         baseName: 'SavePick',
         category: 'picking',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Pick: 'Pick'
+        }
     });
 
     registerApi({
         enumName: 'PICK_QUERY',
         baseName: 'PickQuery',
         category: 'picking',
-        arrayPaths: ['Pick']
+        arrayPaths: ['Pick'],
+        fields: {
+            StartIndex: 'int',
+            RecordCount: 'int',
+            PickNum: 'string',
+            OrderNum: 'string',
+            PickType: 'string',
+            Status: 'string',
+            Priority: 'string',
+            StartDate: 'date',
+            EndDate: 'date',
+            Fulfillable: 'boolean',
+            LocationGroup: 'string'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1504,14 +1769,27 @@
         enumName: 'RECEIVING_LIST',
         baseName: 'ReceivingList',
         category: 'receiving',
-        arrayPaths: ['Receiving']
+        arrayPaths: ['Receiving'],
+        fields: {
+            OrderType: 'int',
+            ReceiptStatus: 'int',
+            StartRecord: 'int',
+            RecordCount: 'int',
+            LocationGroupID: 'int'
+        }
     });
 
     registerApi({
         enumName: 'RECEIVING_ITEMS',
         baseName: 'ReceivingItems',
         category: 'receiving',
-        arrayPaths: ['ReceivingItem']
+        arrayPaths: ['ReceivingItem'],
+        fields: {
+            OrderNumber: 'string',
+            OrderType: 'int',
+            LocationGroup: 'string',
+            ItemStatus: 'int'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1522,21 +1800,30 @@
         enumName: 'MAKE_PAYMENT',
         baseName: 'MakePayment',
         category: 'payment',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Payment: 'Payment'
+        }
     });
 
     registerApi({
         enumName: 'GET_PAYMENT_LIST',
         baseName: 'GetPaymentList',
         category: 'payment',
-        arrayPaths: ['Payment']
+        arrayPaths: ['Payment'],
+        fields: {
+            SOId: 'int'
+        }
     });
 
     registerApi({
         enumName: 'GET_NEXT_ORDER_NUMBER',
         baseName: 'GetNextOrderNumber',
         category: 'payment',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            OrderType: 'string'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1547,7 +1834,12 @@
         enumName: 'BUILD_BOM',
         baseName: 'BuildBom',
         category: 'manufacturing',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            BomNumber: 'string',
+            Quantity: 'string',
+            LocationGroupName: 'string'
+        }
     });
 
     registerApi({
@@ -1557,35 +1849,75 @@
         arrayPaths: [
             'WorkOrder.WOItem',
             'WorkOrder.CustomFieldList.CustomField'
-        ]
+        ],
+        fields: {
+            WorkOrderNumber: 'string'
+        }
     });
 
     registerApi({
         enumName: 'SAVE_WORK_ORDER',
         baseName: 'SaveWorkOrder',
         category: 'manufacturing',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            WO: 'WO',
+            SplitWorkOrder: 'boolean'
+        }
     });
 
     registerApi({
         enumName: 'WORK_ORDER_LIST',
         baseName: 'WorkOrderList',
         category: 'manufacturing',
-        arrayPaths: ['WorkOrder']
+        arrayPaths: ['WorkOrder'],
+        fields: {
+            StartRecord: 'int',
+            Count: 'int',
+            WONum: 'string',
+            MONum: 'string',
+            BOMNum: 'string',
+            BOMDesc: 'string',
+            WOStatus: 'string',
+            BOMType: 'string',
+            LocationGroup: 'string',
+            DateStartedStart: 'date',
+            DateStartedEnd: 'date',
+            DateScheduledStart: 'date',
+            DateScheduledEnd: 'date',
+            DateFinishedStart: 'date',
+            DateFinishedEnd: 'date',
+            SortBy: 'string'
+        }
     });
 
     registerApi({
         enumName: 'ADD_WORK_ORDER_ITEM',
         baseName: 'AddWorkOrderItem',
         category: 'manufacturing',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            OrderNum: 'string',
+            TypeId: 'int',
+            Description: 'string',
+            PartNum: 'string',
+            Quantity: 'double',
+            UOMCode: 'string'
+        }
     });
 
     registerApi({
         enumName: 'YIELD',
         baseName: 'Yield',
         category: 'manufacturing',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            TagNum: 'string',
+            DestinationTagNum: 'string',
+            Location: 'string',
+            Quantity: 'string',
+            Ref: 'string'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1596,42 +1928,56 @@
         enumName: 'LOCATION_GROUP',
         baseName: 'LocationGroup',
         category: 'location',
-        arrayPaths: ['LocationGroup']
+        arrayPaths: ['LocationGroup'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'LOCATION_LIST',
         baseName: 'LocationList',
         category: 'location',
-        arrayPaths: ['Location']
+        arrayPaths: ['Location'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'LOCATION_QUERY',
         baseName: 'LocationQuery',
         category: 'location',
-        arrayPaths: ['Location']
+        arrayPaths: ['Location'],
+        fields: {
+            LocationID: 'int',
+            TagNum: 'int'
+        }
     });
 
     registerApi({
         enumName: 'DEF_LOC_LIST',
         baseName: 'DefLocList',
         category: 'location',
-        arrayPaths: ['DefaultLocation']
+        arrayPaths: ['DefaultLocation'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'DEF_PART_LOC_QUERY',
         baseName: 'DefPartLocQuery',
         category: 'location',
-        arrayPaths: ['DefaultPartLocation']
+        arrayPaths: ['DefaultPartLocation'],
+        fields: {
+            PartNum: 'string'
+        }
     });
 
     registerApi({
         enumName: 'SET_DEF_PART_LOC',
         baseName: 'SetDefPartLoc',
         category: 'location',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            PartNum: 'string',
+            Location: 'Location'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1642,42 +1988,57 @@
         enumName: 'IMPORT',
         baseName: 'Import',
         category: 'importexport',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Type: 'string',
+            Rows: 'Rows'
+        }
     });
 
     registerApi({
         enumName: 'IMPORT_HEADER',
         baseName: 'ImportHeader',
         category: 'importexport',
-        arrayPaths: ['Header.Row']
+        arrayPaths: ['Header.Row'],
+        fields: {
+            Type: 'string'
+        }
     });
 
     registerApi({
         enumName: 'IMPORT_LIST',
         baseName: 'ImportList',
         category: 'importexport',
-        arrayPaths: ['ImportType']
+        arrayPaths: ['ImportType'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'EXPORT',
         baseName: 'Export',
         category: 'importexport',
-        arrayPaths: ['Row']
+        arrayPaths: ['Row'],
+        fields: {
+            Type: 'string'
+        }
     });
 
     registerApi({
         enumName: 'EXPORT_LIST',
         baseName: 'ExportList',
         category: 'importexport',
-        arrayPaths: ['ExportType']
+        arrayPaths: ['ExportType'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'EXPORT_QUERY',
         baseName: 'ExportQuery',
         category: 'importexport',
-        arrayPaths: ['Row']
+        arrayPaths: ['Row'],
+        fields: {
+            Type: 'string'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1688,105 +2049,150 @@
         enumName: 'COMPATIBLE',
         baseName: 'Compatible',
         category: 'general',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Version: 'string',
+            Edition: 'string'
+        }
     });
 
     registerApi({
         enumName: 'ADD_MEMO',
         baseName: 'AddMemo',
         category: 'general',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            ItemType: 'string',
+            TableID: 'int',
+            RecordID: 'int',
+            Memo: 'Memo',
+            PartNum: 'string',
+            ProductNum: 'string',
+            OrderNum: 'string',
+            CustomerName: 'string',
+            VendorName: 'string'
+        }
     });
 
     registerApi({
         enumName: 'CARRIER_LIST',
         baseName: 'CarrierList',
         category: 'general',
-        arrayPaths: ['Carrier']
+        arrayPaths: ['Carrier'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'GET_CARRIER_LIST',
         baseName: 'GetCarrierList',
         category: 'general',
-        arrayPaths: ['Carrier', 'Carrier.Services.CarrierService']
+        arrayPaths: ['Carrier', 'Carrier.Services.CarrierService'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'GET_CUSTOM_FIELDS',
         baseName: 'GetCustomFields',
         category: 'general',
-        arrayPaths: ['CustomField']
+        arrayPaths: ['CustomField'],
+        fields: {
+            Type: 'string'
+        }
     });
 
     registerApi({
         enumName: 'EMAIL_REPORT',
         baseName: 'EmailReport',
         category: 'general',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            ReportName: 'string',
+            ReportTree: 'string',
+            Email: 'string',
+            ParameterList: 'ParameterList'
+        }
     });
 
     registerApi({
         enumName: 'PRINT_REPORT',
         baseName: 'PrintReport',
         category: 'general',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            ModuleName: 'string',
+            ParameterList: 'ParameterList'
+        }
     });
 
     registerApi({
         enumName: 'SAVE_REPORT',
         baseName: 'SaveReport',
         category: 'general',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Report: 'Report',
+            ReportTree: 'string'
+        }
     });
 
     registerApi({
         enumName: 'STATE_AND_COUNTRY',
         baseName: 'StateAndCountry',
         category: 'general',
-        arrayPaths: ['Country', 'Country.State']
+        arrayPaths: ['Country', 'Country.State'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'USER_LIST',
         baseName: 'UserList',
         category: 'general',
-        arrayPaths: ['User']
+        arrayPaths: ['User'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'UOM',
         baseName: 'UOM',
         category: 'general',
-        arrayPaths: ['UOM.UOMConversion']
+        arrayPaths: ['UOM.UOMConversion'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'UOM_LIST',
         baseName: 'UOMList',
         category: 'general',
-        arrayPaths: ['UOM']
+        arrayPaths: ['UOM'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'QB_CLASS_LIST_GET',
         baseName: 'QBClassListGet',
         category: 'general',
-        arrayPaths: ['QBClass']
+        arrayPaths: ['QBClass'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'PAYMENT_TERMS_GET',
         baseName: 'PaymentTermsGet',
         category: 'general',
-        arrayPaths: ['PaymentTerms']
+        arrayPaths: ['PaymentTerms'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'KIT_ITEMS_GET',
         baseName: 'KitItemsGet',
         category: 'general',
-        arrayPaths: ['KitItem']
+        arrayPaths: ['KitItem'],
+        fields: {
+            KitNumber: 'string',
+            CustomerName: 'string',
+            Quantity: 'string'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1797,42 +2203,63 @@
         enumName: 'GET_PLUGIN_DATA',
         baseName: 'GetPluginData',
         category: 'plugin',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            PluginName: 'string'
+        }
     });
 
     registerApi({
         enumName: 'SAVE_PLUGIN_DATA',
         baseName: 'SavePluginData',
         category: 'plugin',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            PluginName: 'string',
+            Data: 'array'
+        }
     });
 
     registerApi({
         enumName: 'GET_SYSTEM_PROPERTY',
         baseName: 'GetSystemProperty',
         category: 'plugin',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Name: 'string'
+        }
     });
 
     registerApi({
         enumName: 'SET_SYSTEM_PROPERTY',
         baseName: 'SetSystemProperty',
         category: 'plugin',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Property: 'Property'
+        }
     });
 
     registerApi({
         enumName: 'LOAD_WEB_PROPERTIES',
         baseName: 'LoadWebProperties',
         category: 'plugin',
-        arrayPaths: ['Property']
+        arrayPaths: ['Property'],
+        fields: {}
     });
 
     registerApi({
         enumName: 'SAVE_WEB_PROPERTIES',
         baseName: 'SaveWebProperties',
         category: 'plugin',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Properties: 'string',
+            HttpPort: 'int',
+            SslPort: 'int',
+            Password: 'string',
+            Enabled: 'boolean'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1843,21 +2270,28 @@
         enumName: 'DISCONNECT_ACCOUNTING',
         baseName: 'DisconnectAccounting',
         category: 'accounting',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {}
     });
 
     registerApi({
         enumName: 'MARK_AS_POSTED_DATA',
         baseName: 'MarkAsPostedData',
         category: 'accounting',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            DatePosted: 'date'
+        }
     });
 
     registerApi({
         enumName: 'SAVE_ASACCOUNT',
         baseName: 'SaveAsAccount',
         category: 'accounting',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            AsAccount: 'AsAccount'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1868,7 +2302,26 @@
         enumName: 'GET_TRANSFER_ORDER_LIST',
         baseName: 'GetTransferOrderList',
         category: 'transferorder',
-        arrayPaths: ['TransferOrder']
+        arrayPaths: ['TransferOrder'],
+        fields: {
+            StartIndex: 'int',
+            Count: 'int',
+            Number: 'string',
+            Type: 'string',
+            Status: 'string',
+            User: 'string',
+            FromLocationGroup: 'string',
+            ToLocationGroup: 'string',
+            DateIssuedStart: 'date',
+            DateIssuedEnd: 'date',
+            DateScheduledStart: 'date',
+            DateScheduledEnd: 'date',
+            DateReceivedStart: 'date',
+            DateReceivedEnd: 'date',
+            ContainingPartNum: 'string',
+            ContainingPartDescription: 'string',
+            SortBy: 'string'
+        }
     });
 
     registerApi({
@@ -1878,14 +2331,21 @@
         arrayPaths: [
             'TransferOrder.TOItem',
             'TransferOrder.CustomFieldList.CustomField'
-        ]
+        ],
+        fields: {
+            Number: 'string'
+        }
     });
 
     registerApi({
         enumName: 'TRANSFER_ORDER_SAVE',
         baseName: 'TransferOrderSave',
         category: 'transferorder',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            TransferOrder: 'TransferOrder',
+            IssueFlag: 'boolean'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1896,28 +2356,36 @@
         enumName: 'DISCOUNT_GET',
         baseName: 'DiscountGet',
         category: 'discounttax',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {}
     });
 
     registerApi({
         enumName: 'SAVE_DISCOUNT',
         baseName: 'SaveDiscount',
         category: 'discounttax',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Discount: 'Discount'
+        }
     });
 
     registerApi({
         enumName: 'TAX_RATE_GET',
         baseName: 'TaxRateGet',
         category: 'discounttax',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {}
     });
 
     registerApi({
         enumName: 'SAVE_TAX_RATE',
         baseName: 'SaveTaxRate',
         category: 'discounttax',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            TaxRate: 'TaxRate'
+        }
     });
 
     // -------------------------------------------------------------------------
@@ -1928,14 +2396,24 @@
         enumName: 'TAG_MOVE',
         baseName: 'TagMove',
         category: 'tag',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            SrcTagNum: 'int',
+            DstTagNum: 'int',
+            Note: 'string'
+        }
     });
 
     registerApi({
         enumName: 'TAG_QUERY',
         baseName: 'TagQuery',
         category: 'tag',
-        arrayPaths: ['Tag']
+        arrayPaths: ['Tag'],
+        fields: {
+            TagID: 'int',
+            TagNum: 'int',
+            LocationID: 'int'
+        }
     });
 
     // TAG_INFO already registered under Inventory above
@@ -1948,14 +2426,21 @@
         enumName: 'SAVE_IMAGE',
         baseName: 'SaveImage',
         category: 'misc',
-        arrayPaths: []
+        arrayPaths: [],
+        fields: {
+            Type: 'string',
+            Number: 'string',
+            Image: 'string',
+            UpdateAssociations: 'boolean'
+        }
     });
 
     registerApi({
         enumName: 'GET_BI_REPORT_LIST',
         baseName: 'GetBIReportList',
         category: 'misc',
-        arrayPaths: ['BIReport']
+        arrayPaths: ['BIReport'],
+        fields: {}
     });
 
     // =========================================================================

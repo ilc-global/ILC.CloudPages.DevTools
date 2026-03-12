@@ -89,6 +89,7 @@
                                 <tr><td>Response</td><td id="schema-rs"></td></tr>
                                 <tr><td>Category</td><td id="schema-category"></td></tr>
                                 <tr><td>Array Paths</td><td id="schema-arrays"></td></tr>
+                                <tr><td>Fields</td><td id="schema-fields"></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -281,10 +282,23 @@ var items = FishbowlJSON.ensureArray(response.Items.Item);</code></pre>
                     arrayPathsEl.textContent = '(none)';
                 }
 
-                // Pre-fill request
+                // Show fields
+                var fieldsEl = document.getElementById('schema-fields');
+                if (schema.fields && Object.keys(schema.fields).length > 0) {
+                    fieldsEl.innerHTML = Object.keys(schema.fields).map(function (f) {
+                        var t = schema.fields[f];
+                        var isPrimitive = ['string','int','double','boolean','date','array'].indexOf(t) !== -1;
+                        return '<code>' + escapeHtml(f) + '</code> <span class="text-muted">(' + t + ')</span>';
+                    }).join('<br>');
+                } else {
+                    fieldsEl.textContent = '(none — no parameters required)';
+                }
+
+                // Pre-fill request with fields template
                 var rqName = schema.baseName + 'Rq';
+                var templateData = buildFieldsTemplate(schema.fields || {});
                 var template = {};
-                template[rqName] = {};
+                template[rqName] = templateData;
                 document.getElementById('requestInput').value = JSON.stringify(template, null, 2);
 
                 // Update code example
@@ -301,21 +315,67 @@ var items = FishbowlJSON.ensureArray(response.Items.Item);</code></pre>
                 return div.innerHTML;
             }
 
+            /** Build a template object from fields metadata. */
+            function buildFieldsTemplate(fields) {
+                var tpl = {};
+                var keys = Object.keys(fields || {});
+                for (var i = 0; i < keys.length; i++) {
+                    var key = keys[i];
+                    var type = fields[key];
+                    switch (type) {
+                        case 'string': tpl[key] = ''; break;
+                        case 'int':    tpl[key] = 0; break;
+                        case 'double': tpl[key] = 0.0; break;
+                        case 'boolean': tpl[key] = false; break;
+                        case 'date':   tpl[key] = 'yyyy-MM-dd'; break;
+                        case 'array':  tpl[key] = []; break;
+                        default:       tpl[key] = {}; break; // complex object
+                    }
+                }
+                return tpl;
+            }
+
+            /** Build a compact inline string for code example from fields. */
+            function buildFieldsInline(fields) {
+                var keys = Object.keys(fields || {});
+                if (keys.length === 0) return '{}';
+                if (keys.length > 4) {
+                    // Show first 3 fields + ellipsis
+                    var parts = keys.slice(0, 3).map(function (k) {
+                        return k + ': ...';
+                    });
+                    return '{ ' + parts.join(', ') + ', /* ... */ }';
+                }
+                var parts = keys.map(function (k) {
+                    var t = fields[k];
+                    switch (t) {
+                        case 'string': return k + ": ''";
+                        case 'int': case 'double': return k + ': 0';
+                        case 'boolean': return k + ': false';
+                        case 'date': return k + ": 'yyyy-MM-dd'";
+                        case 'array': return k + ': []';
+                        default: return k + ': { /* ' + t + ' */ }';
+                    }
+                });
+                return '{ ' + parts.join(', ') + ' }';
+            }
+
             // ---------- Code Example ----------
             function updateCodeExample(schema) {
                 var baseName = schema.baseName;
                 var rqName = baseName + 'Rq';
                 var enumName = schema.enumName;
+                var inline = buildFieldsInline(schema.fields);
 
                 var code =
                     '// Using FishbowlJSON factory (recommended)\n' +
-                    'var rq = FishbowlJSON.' + rqName + '({ /* your data here */ });\n' +
+                    'var rq = FishbowlJSON.' + rqName + '(' + inline + ');\n' +
                     'var rs = await FB.legacyApiAsync(rq);\n' +
                     'FishbowlJSON.normalizeRs(rq, rs);  // Fix array normalization\n' +
                     '\n' +
                     '// Using enum name directly\n' +
                     'var rs = await FB.legacyApiAsync(\'' + enumName + '\', JSON.stringify({\n' +
-                    '    ' + rqName + ': { /* your data here */ }\n' +
+                    '    ' + rqName + ': ' + inline + '\n' +
                     '}));';
 
                 document.getElementById('codeExample').textContent = code;
