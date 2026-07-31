@@ -1,0 +1,57 @@
+name: Build Release
+
+# Publishes the whole site as a release asset. The CDN admin service publishes that
+# asset under an immutable version path, and moves the `current` alias to it.
+# This repo holds no copies of fb.js, cloudpages.js or any third-party library.
+# The pages load those from cdn.ilcreports.com.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - '.github/**'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate version
+        id: version
+        run: |
+          DATE_VER=$(date -u +'%Y.%m.%d')
+          echo "version=${DATE_VER}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Stage the site
+        run: |
+          mkdir -p dist
+          rsync -a --exclude '.git' --exclude '.github' --exclude 'dist' --exclude 'docs' ./ dist/
+
+      # A page that still loads a library from a relative path would break once published,
+      # because the copies are gone. Catch that here rather than on the CDN.
+      - name: Check for local library references
+        run: |
+          set -euo pipefail
+          if grep -rnE '(src|href)="(js|css)/(fb|cloudpages|jquery|bootstrap|dataTables|xlsx|driver)[^"]*"' dist --include='*.html'; then
+            echo "::error::a page references a library by relative path. Use cdn.ilcreports.com."
+            exit 1
+          fi
+          echo "no local library references"
+
+      - name: Build zip
+        run: cd dist && zip -r ../ILC.CloudPages.DevTools-v${{ steps.version.outputs.version }}.zip .
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          files: ILC.CloudPages.DevTools-v${{ steps.version.outputs.version }}.zip
+          generate_release_notes: true
