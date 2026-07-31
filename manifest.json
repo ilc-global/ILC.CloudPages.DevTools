@@ -1,0 +1,68 @@
+{
+  "name": "CloudPages DevTools",
+  "pages": [
+    {
+      "url": "00_Environment.html",
+      "fb_title": "Environment & Context",
+      "description": "Runtime detection, user context, available methods, access rights, logging",
+      "fb_path": "DevTools",
+      "fb_modules": "all"
+    },
+    {
+      "url": "01_SQL_Console.html",
+      "fb_title": "SQL Console",
+      "description": "Parameterized SQL runner with DataTables results",
+      "fb_path": "DevTools",
+      "fb_modules": "all"
+    },
+    {
+      "url": "02_Legacy_API_Explorer.html",
+      "fb_title": "Legacy API Explorer",
+      "description": "Browse all 109 API calls, build requests, view normalized responses",
+      "fb_path": "DevTools",
+      "fb_modules": "all"
+    },
+    {
+      "url": "03_REST_API_Tester.html",
+      "fb_title": "REST API Tester",
+      "description": "Method/path/body form with request history",
+      "fb_path": "DevTools",
+      "fb_modules": "all"
+    },
+    {
+      "url": "04_CSV_Import_Builder.html",
+      "fb_title": "CSV Import Builder",
+      "description": "Explore 56 import types, build CSV from JSON, execute imports",
+      "fb_path": "DevTools",
+      "fb_modules": "all"
+    },
+    {
+      "url": "05_Reports_Printing.html",
+      "fb_title": "Reports & Printing",
+      "description": "Report preview/PDF, printer listing, PDF/ZPL printing",
+      "fb_path": "DevTools",
+      "fb_modules": "all"
+    },
+    {
+      "url": "06_Navigation_Dialogs.html",
+      "fb_title": "Navigation & UI Controls",
+      "description": "Module hyperlinks, status bar, progress, fullscreen, scheduled tasks",
+      "fb_path": "DevTools",
+      "fb_modules": "all"
+    },
+    {
+      "url": "07_Files_PluginData.html",
+      "fb_title": "Files & Plugin Data",
+      "description": "Read and save files, plugin data CRUD",
+      "fb_path": "DevTools",
+      "fb_modules": "all"
+    },
+    {
+      "url": "08_Timezone.html",
+      "fb_title": "Timezone Utilities",
+      "description": "Server/client time conversion, multi-timezone comparison",
+      "fb_path": "DevTools",
+      "fb_modules": "all"
+    }
+  ]
+}
