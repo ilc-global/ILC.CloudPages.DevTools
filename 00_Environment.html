@@ -11,7 +11,7 @@
 
     <link rel="stylesheet" href="https://cdn.ilcreports.com/vendor/bootstrap/5.3.3/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://cdn.ilcreports.com/vendor/bootstrap/5.3.3/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <script src="https://cdn.ilcreports.com/fb/v2026.07.31.7/fb.js"></script>
+    <script src="https://cdn.ilcreports.com/fb/v2026.08.07.9/fb.js"></script>
     <script src="js/fishbowl.js"></script>
     <style>
         .pre-scroll { max-height: 300px; overflow-y: auto; }
@@ -38,6 +38,7 @@
                     <li class="nav-item"><a class="nav-link" href="06_Navigation_Dialogs.html">Navigation & UI</a></li>
                     <li class="nav-item"><a class="nav-link" href="07_Files_PluginData.html">Files & Data</a></li>
                     <li class="nav-item"><a class="nav-link" href="08_Timezone.html">Timezone</a></li>
+                    <li class="nav-item"><a class="nav-link" href="09_Hardware.html">Hardware</a></li>
                 </ul>
             </div>
         </div>
@@ -67,6 +68,7 @@
                                 <tr><td class="fw-bold">isWeb</td><td id="rt-web" class="loading">loading...</td></tr>
                                 <tr><td class="fw-bold">isDemo</td><td id="rt-demo" class="loading">loading...</td></tr>
                                 <tr><td class="fw-bold">bridgeVersion</td><td id="rt-bridge" class="loading">loading...</td></tr>
+                                <tr><td class="fw-bold">clientTheme</td><td id="rt-theme" class="loading">loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -143,6 +145,7 @@
                             <button class="btn btn-outline-secondary btn-sm" id="btnLogTest">FB.log('test')</button>
                             <button class="btn btn-outline-danger btn-sm" id="btnLogError">FB.logError('test error')</button>
                             <button class="btn btn-outline-primary btn-sm" id="btnViewLog">View Log</button>
+                            <button class="btn btn-outline-secondary btn-sm" id="btnServerLog">Server Log</button>
                         </div>
                         <pre id="logOutput" class="pre-scroll border p-2 bg-light mb-0" style="min-height:80px;"></pre>
                     </div>
@@ -201,9 +204,14 @@ console.log(FB.logMessages());</code></pre>
                     document.getElementById('rt-web').textContent = String(FB.isWeb);
                     document.getElementById('rt-demo').textContent = String(FB.isDemo);
                     document.getElementById('rt-bridge').textContent = FB.bridgeVersion || '(none)';
+                    // The Fishbowl client's own light/dark choice. Every product's
+                    // theme follows this, and CAT-071 captures against it — but it
+                    // had no diagnostic until now.
+                    document.getElementById('rt-theme').textContent =
+                        (typeof FB.getClientTheme === 'function' ? (FB.getClientTheme() || '(none)') : '(not in this fb.js)');
 
                     // Remove loading class
-                    document.querySelectorAll('#rt-version,#rt-environment,#rt-jxbrowser,#rt-web,#rt-demo,#rt-bridge')
+                    document.querySelectorAll('#rt-version,#rt-environment,#rt-jxbrowser,#rt-web,#rt-demo,#rt-bridge,#rt-theme')
                         .forEach(function (el) { el.classList.remove('loading'); });
                 } catch (e) {
                     console.error('Error loading runtime info:', e);
@@ -318,6 +326,19 @@ console.log(FB.logMessages());</code></pre>
                 try {
                     FB.logError('test error');
                     document.getElementById('logOutput').textContent = 'Logged error "test error" successfully.';
+                } catch (e) {
+                    document.getElementById('logOutput').textContent = 'Error: ' + e.message;
+                }
+            });
+
+            // The Fishbowl SERVER's log, distinct from this page's own buffer.
+            // The bridge method behind it is misspelled (serverLogMessges); the
+            // wrapper is spelled correctly and returns '' where unavailable.
+            document.getElementById('btnServerLog').addEventListener('click', function () {
+                try {
+                    var log = (typeof FB.serverLogMessages === 'function') ? FB.serverLogMessages() : '';
+                    document.getElementById('logOutput').textContent =
+                        log || '(server log unavailable - needs rights, or an fb.js that wraps it)';
                 } catch (e) {
                     document.getElementById('logOutput').textContent = 'Error: ' + e.message;
                 }

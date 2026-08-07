@@ -63,6 +63,13 @@
       "description": "Server/client time conversion, multi-timezone comparison",
       "fb_path": "DevTools",
       "fb_modules": "all"
+    },
+    {
+      "url": "09_Hardware.html",
+      "fb_title": "Hardware",
+      "description": "USB scale, barcode scanner, serial ports, TCP sockets, and bridge capability",
+      "fb_path": "DevTools",
+      "fb_modules": "all"
     }
   ]
 }
